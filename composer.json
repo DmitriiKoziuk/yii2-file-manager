@@ -1,0 +1,38 @@
+{
+  "name": "dmitriikoziuk/yii2-file-manager",
+  "description": "yii2 file manager extension",
+  "type": "yii2-extension",
+  "keywords": [
+    "yii2",
+    "extension",
+    "file manager",
+    "upload files",
+    "upload images"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Dmitrii Koziuk",
+      "email": "dmitriikoziuk@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.1.0",
+    "ext-imagick": "^3.0.0",
+    "ext-fileinfo": "*",
+    "yiisoft/yii2": "~2.0.0",
+    "yiisoft/yii2-imagine": "~2.1.0",
+    "kartik-v/yii2-widget-fileinput": "@dev",
+    "dmitriikoziuk/yii2-base": "dev-master",
+    "dmitriikoziuk/yii2-config-manager": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "DmitriiKoziuk\\yii2FileManager\\": "src"
+    }
+  },
+  "extra": {
+    "bootstrap": "DmitriiKoziuk\\yii2FileManager\\Bootstrap"
+  }
+}
