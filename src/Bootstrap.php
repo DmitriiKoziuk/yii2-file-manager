@@ -3,7 +3,7 @@ namespace DmitriiKoziuk\yii2FileManager;
 
 use Yii;
 use yii\base\BootstrapInterface;
-use DmitriiKoziuk\yii2ConfigManager\ConfigManager as ConfigModule;
+use DmitriiKoziuk\yii2ConfigManager\ConfigManagerModule;
 use DmitriiKoziuk\yii2ConfigManager\services\ConfigService;
 use DmitriiKoziuk\yii2ModuleManager\services\ModuleService;
 
@@ -23,11 +23,11 @@ final class Bootstrap implements BootstrapInterface
             'class' => FileManagerModule::class,
             'diContainer' => Yii::$container,
             'backendAppId' => $configService->getValue(
-                ConfigModule::GENERAL_CONFIG_NAME,
+                ConfigManagerModule::GENERAL_CONFIG_NAME,
                 'backendAppId'
             ),
             'frontendDomainName' => $configService->getValue(
-                ConfigModule::GENERAL_CONFIG_NAME,
+                ConfigManagerModule::GENERAL_CONFIG_NAME,
                 'frontendDomainName'
             ),
         ]);
