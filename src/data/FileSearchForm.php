@@ -1,9 +1,9 @@
 <?php
 namespace DmitriiKoziuk\yii2FileManager\data;
 
-use DmitriiKoziuk\yii2Base\data\Data;
+use DmitriiKoziuk\yii2Base\forms\Form;
 
-class FileSearchParams extends Data
+class FileSearchForm extends Form
 {
     public $id;
     public $entity_name;

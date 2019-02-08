@@ -1,9 +1,9 @@
 <?php
 namespace DmitriiKoziuk\yii2FileManager\data;
 
-use DmitriiKoziuk\yii2Base\data\Data;
+use DmitriiKoziuk\yii2Base\forms\Form;
 
-class UploadFileData extends Data
+class UploadFileData extends Form
 {
     public $saveLocationAlias;
     public $entityName;
