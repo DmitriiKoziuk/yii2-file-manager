@@ -4,7 +4,7 @@ namespace DmitriiKoziuk\yii2FileManager\widgets;
 use yii\base\Widget;
 use yii\helpers\Url;
 use kartik\file\FileInput;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 
 class FileInputWidget extends Widget
 {
@@ -44,7 +44,7 @@ class FileInputWidget extends Widget
                 'initialPreviewAsData'=> true,
                 'initialCaption'=> "",
                 'initialPreviewConfig' => $this->initialPreviewConfig,
-                'uploadUrl' => Url::to(['/'. FileManager::ID .'/file/upload']),
+                'uploadUrl' => Url::to(['/'. FileManagerModule::ID .'/file/upload']),
                 'uploadExtraData' => [
                     'UploadFileData[saveLocationAlias]' => $this->saveLocationAlias,
                     'UploadFileData[entityName]' => $this->entityName,

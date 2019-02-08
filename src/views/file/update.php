@@ -1,16 +1,16 @@
 <?php
 
 use yii\helpers\Html;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2Base\BaseModule as BaseModule;
 
 /* @var $this yii\web\View */
 /* @var $model \DmitriiKoziuk\yii2FileManager\entities\File */
 
-$this->title = Yii::t(FileManager::ID, 'Update File: {name}', [
+$this->title = Yii::t(FileManagerModule::ID, 'Update File: {name}', [
     'name' => $model->name,
 ]);
-$this->params['breadcrumbs'][] = ['label' => Yii::t(FileManager::ID, 'Files'), 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => Yii::t(FileManagerModule::ID, 'Files'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = Yii::t(BaseModule::ID, 'Update');
 ?>

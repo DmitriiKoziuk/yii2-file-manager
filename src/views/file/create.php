@@ -4,12 +4,12 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use kartik\file\FileInput;
 use DmitriiKoziuk\yii2FileManager\assets\BackendFileUploadAsset;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 
 /* @var $this yii\web\View */
 
-$this->title = Yii::t(FileManager::ID, 'Upload files');
-$this->params['breadcrumbs'][] = ['label' => Yii::t(FileManager::ID, 'Files'), 'url' => ['index']];
+$this->title = Yii::t(FileManagerModule::ID, 'Upload files');
+$this->params['breadcrumbs'][] = ['label' => Yii::t(FileManagerModule::ID, 'Files'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 BackendFileUploadAsset::register($this);
@@ -20,7 +20,7 @@ BackendFileUploadAsset::register($this);
   <div class="row">
     <div class="col-md-4">
       <div class="form-group">
-        <label for="location"><?= Yii::t(FileManager::ID, 'Save location alias') ?></label>
+        <label for="location"><?= Yii::t(FileManagerModule::ID, 'Save location alias') ?></label>
           <?= Html::dropDownList(
               'save-location-alias',
               null,

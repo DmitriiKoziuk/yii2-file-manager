@@ -2,7 +2,7 @@
 
 use yii\helpers\Html;
 use yii\grid\GridView;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 
 /**
  * @var $this           yii\web\View
@@ -11,7 +11,7 @@ use DmitriiKoziuk\yii2FileManager\FileManager;
  * @var $fileWebHelper \DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper
  */
 
-$this->title = Yii::t(FileManager::ID, 'Files');
+$this->title = Yii::t(FileManagerModule::ID, 'Files');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="file-index">
@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p>
-        <?= Html::a(Yii::t(FileManager::ID, 'Upload files'), ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a(Yii::t(FileManagerModule::ID, 'Upload files'), ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?= GridView::widget([

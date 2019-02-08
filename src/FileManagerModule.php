@@ -12,7 +12,7 @@ use DmitriiKoziuk\yii2FileManager\services\FileActionService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 
-final class FileManager extends \yii\base\Module implements ModuleInterface
+final class FileManagerModule extends \yii\base\Module implements ModuleInterface
 {
     const ID = 'dk-file-manager';
 

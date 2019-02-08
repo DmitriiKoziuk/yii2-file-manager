@@ -19,8 +19,8 @@ final class Bootstrap implements BootstrapInterface
         $container = Yii::$container;
         /** @var ConfigService $configService */
         $configService = $container->get(ConfigService::class);
-        $app->setModule(FileManager::ID, [
-            'class' => FileManager::class,
+        $app->setModule(FileManagerModule::ID, [
+            'class' => FileManagerModule::class,
             'diContainer' => Yii::$container,
             'backendAppId' => $configService->getValue(
                 ConfigModule::GENERAL_CONFIG_NAME,
@@ -31,8 +31,8 @@ final class Bootstrap implements BootstrapInterface
                 'frontendDomainName'
             ),
         ]);
-        /** @var FileManager $module */
-        $module = $app->getModule(FileManager::ID);
+        /** @var FileManagerModule $module */
+        $module = $app->getModule(FileManagerModule::ID);
         /** @var ModuleService $moduleService */
         $moduleService = Yii::$container->get(ModuleService::class);
         $moduleService->registerModule($module);

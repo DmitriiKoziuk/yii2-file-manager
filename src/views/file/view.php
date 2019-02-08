@@ -2,14 +2,14 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2Base\BaseModule as BaseModule;
 
 /* @var $this yii\web\View */
 /* @var $model \DmitriiKoziuk\yii2FileManager\entities\File */
 
 $this->title = $model->title;
-$this->params['breadcrumbs'][] = ['label' => Yii::t(FileManager::ID, 'Files'), 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => Yii::t(FileManagerModule::ID, 'Files'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
