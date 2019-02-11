@@ -16,15 +16,7 @@ php composer.phar require dmitriikoziuk/yii2-file-manager
 or add
 
 ```
-"dmitriikoziuk/yii2-file-manager": "*"
+"dmitriikoziuk/yii2-file-manager": "^0.1"
 ```
 
 to the require section of your `composer.json` file.
-
-Add to common/config/params-local.php
-
-``
-'dkFileManager' => [
-    'frontendDomainName' => ''
-],
-``
