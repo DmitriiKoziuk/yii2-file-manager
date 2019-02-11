@@ -6,7 +6,7 @@ use yii\BaseYii;
 use yii\db\Connection;
 use yii\db\Expression;
 use yii\web\UploadedFile;
-use DmitriiKoziuk\yii2Base\services\EntityActionService;
+use DmitriiKoziuk\yii2Base\services\DBActionService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
@@ -15,7 +15,7 @@ use DmitriiKoziuk\yii2FileManager\entities\Image;
 use DmitriiKoziuk\yii2FileManager\exceptions\FileNotFoundException;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 
-class FileActionService extends EntityActionService
+class FileActionService extends DBActionService
 {
     /**
      * @var array
