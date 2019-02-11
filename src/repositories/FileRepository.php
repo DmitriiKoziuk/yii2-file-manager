@@ -1,10 +1,10 @@
 <?php
 namespace DmitriiKoziuk\yii2FileManager\repositories;
 
-use DmitriiKoziuk\yii2Base\repositories\ActiveRecordRepository;
+use DmitriiKoziuk\yii2Base\repositories\AbstractActiveRecordRepository;
 use DmitriiKoziuk\yii2FileManager\entities\File;
 
-class FileRepository extends ActiveRecordRepository
+class FileRepository extends AbstractActiveRecordRepository
 {
     /**
      * @param string $entityName
