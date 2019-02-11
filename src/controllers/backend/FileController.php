@@ -20,7 +20,7 @@ use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 /**
  * FileController implements the CRUD actions for File model.
  */
-class FileController extends Controller
+final class FileController extends Controller
 {
     /**
      * @var FileActionService
