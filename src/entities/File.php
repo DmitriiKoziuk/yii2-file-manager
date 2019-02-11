@@ -5,7 +5,7 @@ namespace DmitriiKoziuk\yii2FileManager\entities;
 use Yii;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 
 /**
  * This is the model class for table "{{%dk_files}}".
@@ -72,18 +72,18 @@ class File extends ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id'             => Yii::t(FileManager::ID, 'ID'),
-            'entity_name'    => Yii::t(FileManager::ID, 'Entity Name'),
-            'entity_id'      => Yii::t(FileManager::ID, 'Entity ID'),
-            'location_alias' => Yii::t(FileManager::ID, 'Location alias'),
-            'mime_type'      => Yii::t(FileManager::ID, 'Mime type'),
-            'name'           => Yii::t(FileManager::ID, 'Name'),
-            'extension'      => Yii::t(FileManager::ID, 'Extension'),
-            'size'           => Yii::t(FileManager::ID, 'Size'),
-            'title'          => Yii::t(FileManager::ID, 'Title'),
-            'sort'           => Yii::t(FileManager::ID, 'Sort'),
-            'created_at'     => Yii::t(FileManager::ID, 'Created at'),
-            'updated_at'     => Yii::t(FileManager::ID, 'Updated at'),
+            'id'             => Yii::t(FileManagerModule::ID, 'ID'),
+            'entity_name'    => Yii::t(FileManagerModule::ID, 'Entity Name'),
+            'entity_id'      => Yii::t(FileManagerModule::ID, 'Entity ID'),
+            'location_alias' => Yii::t(FileManagerModule::ID, 'Location alias'),
+            'mime_type'      => Yii::t(FileManagerModule::ID, 'Mime type'),
+            'name'           => Yii::t(FileManagerModule::ID, 'Name'),
+            'extension'      => Yii::t(FileManagerModule::ID, 'Extension'),
+            'size'           => Yii::t(FileManagerModule::ID, 'Size'),
+            'title'          => Yii::t(FileManagerModule::ID, 'Title'),
+            'sort'           => Yii::t(FileManagerModule::ID, 'Sort'),
+            'created_at'     => Yii::t(FileManagerModule::ID, 'Created at'),
+            'updated_at'     => Yii::t(FileManagerModule::ID, 'Updated at'),
         ];
     }
 

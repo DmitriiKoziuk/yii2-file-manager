@@ -2,7 +2,7 @@
 namespace DmitriiKoziuk\yii2FileManager\helpers;
 
 use yii\helpers\Url;
-use DmitriiKoziuk\yii2FileManager\FileManager;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\entities\File;
 
 class FileWebHelper
@@ -60,7 +60,7 @@ class FileWebHelper
             $list[] = [
                 'caption' => $file->name . '.' . $file->extension,
                 'size'    => $file->size,
-                'url'     => Url::to(['/'. FileManager::ID .'/file/delete', 'id' => $file->id]),
+                'url'     => Url::to(['/'. FileManagerModule::ID .'/file/delete', 'id' => $file->id]),
                 'key'     => $file->sort,
             ];
         }

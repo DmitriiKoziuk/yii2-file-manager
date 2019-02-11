@@ -3,11 +3,11 @@ namespace DmitriiKoziuk\yii2FileManager\services;
 
 use yii\data\ActiveDataProvider;
 use DmitriiKoziuk\yii2FileManager\entities\File;
-use DmitriiKoziuk\yii2FileManager\data\FileSearchParams;
+use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
 
 class FileSearchService
 {
-    public function searchBy(FileSearchParams $params): ActiveDataProvider
+    public function searchBy(FileSearchForm $params): ActiveDataProvider
     {
         $query = File::find();
 

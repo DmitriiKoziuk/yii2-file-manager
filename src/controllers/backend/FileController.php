@@ -12,7 +12,7 @@ use yii\filters\VerbFilter;
 use DmitriiKoziuk\yii2FileManager\entities\File;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
-use DmitriiKoziuk\yii2FileManager\data\FileSearchParams;
+use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
 use DmitriiKoziuk\yii2FileManager\services\FileActionService;
 use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
@@ -20,7 +20,7 @@ use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 /**
  * FileController implements the CRUD actions for File model.
  */
-class FileController extends Controller
+final class FileController extends Controller
 {
     /**
      * @var FileActionService
@@ -62,12 +62,12 @@ class FileController extends Controller
      */
     public function actionIndex()
     {
-        $searchParams = new FileSearchParams();
+        $searchForm = new FileSearchForm();
         $searchService = new FileSearchService();
-        $dataProvider = $searchService->searchBy($searchParams);
+        $dataProvider = $searchService->searchBy($searchForm);
 
         return $this->render('index', [
-            'searchModel' => $searchParams,
+            'searchModel' => $searchForm,
             'dataProvider' => $dataProvider,
             'fileWebHelper' => $this->_fileWebHelper,
         ]);
