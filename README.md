@@ -16,7 +16,7 @@ php composer.phar require dmitriikoziuk/yii2-file-manager
 or add
 
 ```
-"dmitriikoziuk/yii2-file-manager": "^0.1"
+"dmitriikoziuk/yii2-file-manager": "~0.2.0"
 ```
 
 to the require section of your `composer.json` file.
