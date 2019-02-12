@@ -6,7 +6,9 @@ use yii\di\Container;
 use yii\web\UploadedFile;
 use yii\web\Application as WebApp;
 use yii\base\Application as BaseApp;
+use DmitriiKoziuk\yii2Base\BaseModule;
 use DmitriiKoziuk\yii2ModuleManager\interfaces\ModuleInterface;
+use DmitriiKoziuk\yii2ConfigManager\ConfigManagerModule;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 use DmitriiKoziuk\yii2FileManager\services\FileActionService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
@@ -54,14 +56,22 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
         $this->_registerClassesToDIContainer($app);
     }
 
-    public function getId(): string
+    public static function getId(): string
     {
-        return $this::ID;
+        return self::ID;
     }
 
     public function getBackendMenuItems(): array
     {
         return ['label' => 'File manager', 'url' => ['/' . self::ID . '/file/index']];
+    }
+
+    public static function requireOtherModulesToBeActive(): array
+    {
+        return [
+            BaseModule::class,
+            ConfigManagerModule::class,
+        ];
     }
 
     /**
