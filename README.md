@@ -27,5 +27,5 @@ The preferred way to install this extension is through [composer](http://getcomp
 2. Run command 
 
     ```
-    /path/to/php-bin/php /path/to/yii-application/yii migrate --migrationPath=@DmitriiKoziuk/yii2FileManager/migrations
+    /path/to/php-bin/php /path/to/yii-application/yii migrate
     ```
