@@ -82,7 +82,7 @@ class FileActionService extends DBActionService
             throw new \Exception('Cant find uploaded files.');
         }
         foreach ($uploadedFiles as $uploadedFile) {
-            if (empty($data->name)) {
+            if (empty($data->name) || 'null' === $data->name) {
                 $fileName = $this->_fileHelper->prepareFilename($uploadedFile->name);
             } else {
                 $fileName = $this->_fileHelper->prepareFilename(
