@@ -70,7 +70,6 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
     public static function requireOtherModulesToBeActive(): array
     {
         return [
-            BaseModule::class,
             ConfigManagerModule::class,
         ];
     }
@@ -85,7 +84,13 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
             $this->controllerNamespace = __NAMESPACE__ . '\controllers\backend';
         }
         if ($app instanceof ConsoleApp) {
-            $app->controllerMap['migrate']['migrationNamespaces'][] = __NAMESPACE__ . '\migrations';
+            $app->controllerMap['migrate'] = [
+                'class' => 'yii\console\controllers\MigrateController',
+                'migrationPath' => null,
+                'migrationNamespaces' => [
+                    __NAMESPACE__ . '\migrations',
+                ],
+            ];
         }
         if (empty($this->uploadFilePath)) {
             $this->uploadFilePath = DIRECTORY_SEPARATOR .
