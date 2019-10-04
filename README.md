@@ -16,14 +16,6 @@ The preferred way to install this extension is through [composer](http://getcomp
     php composer.phar require dmitriikoziuk/yii2-file-manager
     ```
     
-    or add
-    
-    ```
-    "dmitriikoziuk/yii2-file-manager": "~0.2.0"
-    ```
-    
-    to the require section of your `composer.json` file.
-    
 2. Run command 
 
     ```
