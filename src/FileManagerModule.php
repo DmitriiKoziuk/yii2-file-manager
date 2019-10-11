@@ -7,8 +7,8 @@ use yii\web\UploadedFile;
 use yii\web\Application as WebApp;
 use yii\base\Application as BaseApp;
 use yii\console\Application as ConsoleApp;
-use DmitriiKoziuk\yii2Base\BaseModule;
 use DmitriiKoziuk\yii2ModuleManager\interfaces\ModuleInterface;
+use DmitriiKoziuk\yii2ModuleManager\ModuleManager;
 use DmitriiKoziuk\yii2ConfigManager\ConfigManagerModule;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 use DmitriiKoziuk\yii2FileManager\services\FileActionService;
@@ -70,6 +70,7 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
     public static function requireOtherModulesToBeActive(): array
     {
         return [
+            ModuleManager::class,
             ConfigManagerModule::class,
         ];
     }
@@ -84,13 +85,10 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
             $this->controllerNamespace = __NAMESPACE__ . '\controllers\backend';
         }
         if ($app instanceof ConsoleApp) {
-            $app->controllerMap['migrate'] = [
-                'class' => 'yii\console\controllers\MigrateController',
-                'migrationPath' => null,
-                'migrationNamespaces' => [
-                    __NAMESPACE__ . '\migrations',
-                ],
-            ];
+            array_push(
+                $app->controllerMap['migrate']['migrationNamespaces'],
+                __NAMESPACE__ . '\migrations'
+            );
         }
         if (empty($this->uploadFilePath)) {
             $this->uploadFilePath = DIRECTORY_SEPARATOR .
