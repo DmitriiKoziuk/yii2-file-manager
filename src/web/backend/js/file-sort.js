@@ -6,7 +6,7 @@ $(document).ready(function () {
       url: '/dk-file-manager/file/sort',
       type: 'POST',
       data: JSON.stringify({
-        id: url.substr(url.length - 1),
+        id: url.substring(url.lastIndexOf('=') + 1),
         name: params.stack[ params.newIndex ].caption,
         sort: params.newIndex,
       }),
