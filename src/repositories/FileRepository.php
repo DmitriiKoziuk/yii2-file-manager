@@ -38,6 +38,7 @@ class FileRepository extends AbstractActiveRecordRepository
                 File::tableName() . '.entity_name' => $entityName,
                 File::tableName() . '.entity_id' => $entityId,
             ])
+            ->orderBy('sort')
             ->indexBy('sort');
         return $files->andWhere(['like', File::tableName() . '.mime_type', 'image%', false])->all();
     }
