@@ -9,6 +9,7 @@ use yii\web\UploadedFile;
 use DmitriiKoziuk\yii2Base\services\DBActionService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
+use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
 use DmitriiKoziuk\yii2FileManager\entities\File;
 use DmitriiKoziuk\yii2FileManager\entities\Image;
@@ -177,6 +178,26 @@ class FileActionService extends DBActionService
             $this->commitTransaction();
             return $file;
         } catch (\Throwable $e) {
+            $this->rollbackTransaction();
+            throw $e;
+        }
+    }
+
+    /**
+     * @param UpdateFileSortForm $form
+     * @throws \DmitriiKoziuk\yii2Base\exceptions\ExternalComponentException
+     */
+    public function changeFileSort(UpdateFileSortForm $form)
+    {
+        try {
+            $this->beginTransaction();
+            $fileEntity = $this->_fileRepository->getFileById($form->fileId);
+            $this->_fileRepository->moveFileToEnd($fileEntity);
+            $this->_fileRepository->increaseFileSortByOne($fileEntity->entity_name, $form->newSort);
+            $fileEntity->sort = $form->newSort;
+            $this->_fileRepository->save($fileEntity);
+            $this->commitTransaction();;
+        } catch (\Exception $e) {
             $this->rollbackTransaction();
             throw $e;
         }

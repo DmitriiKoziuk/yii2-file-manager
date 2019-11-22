@@ -5,6 +5,7 @@ use yii\base\Widget;
 use yii\helpers\Url;
 use kartik\file\FileInput;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use DmitriiKoziuk\yii2FileManager\assets\FileSortAsset;
 
 class FileInputWidget extends Widget
 {
@@ -33,10 +34,12 @@ class FileInputWidget extends Widget
      */
     public function run()
     {
+        $this->view->registerAssetBundle(FileSortAsset::class);
         return FileInput::widget([
             'name' => "UploadFileForm[upload][]",
             'options'=>[
-                'multiple'=> true
+                'multiple'=> true,
+                'class' => 'upload-file-form',
             ],
             'pluginOptions' => [
                 'uploadAsync' => false,

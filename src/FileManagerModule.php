@@ -52,6 +52,7 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
     {
         /** @var BaseApp $app */
         $app = $this->module;
+        $app->request->parsers['application/json'] = 'yii\web\JsonParser';
         $this->_initLocalProperties($app);
         $this->_registerTranslation($app);
         $this->_registerClassesToDIContainer($app);

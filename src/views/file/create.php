@@ -1,18 +1,23 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
-use kartik\file\FileInput;
-use DmitriiKoziuk\yii2FileManager\assets\BackendFileUploadAsset;
+use DmitriiKoziuk\yii2FileManager\assets\MainBackendFileUploadAsset;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use DmitriiKoziuk\yii2FileManager\widgets\FileInputWidget;
+use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
+use DmitriiKoziuk\yii2FileManager\entities\File;
 
-/* @var $this yii\web\View */
+/**
+ * @var $this yii\web\View
+ * @var FileWebHelper $fileWebHelper
+ * @var File[] $files
+ */
 
 $this->title = Yii::t(FileManagerModule::ID, 'Upload files');
 $this->params['breadcrumbs'][] = ['label' => Yii::t(FileManagerModule::ID, 'Files'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-BackendFileUploadAsset::register($this);
+MainBackendFileUploadAsset::register($this);
 ?>
 <div class="file-create">
   <h1><?= Html::encode($this->title) ?></h1>
@@ -33,27 +38,13 @@ BackendFileUploadAsset::register($this);
 
   <div class="row">
     <div class="col-md-12">
-        <?= FileInput::widget([
-            'id' => 'upload-file-form',
-            'name' => "UploadFileForm[upload][]",
-            'options'=>[
-                'multiple'=> true
-            ],
-            'pluginOptions' => [
-                'uploadAsync' => false,
-                'initialPreview' => [],
-                'initialPreviewAsData'=> true,
-                'initialCaption'=> "",
-                'initialPreviewConfig' => [],
-                'uploadUrl' => Url::to(['/dkFileManager/file/upload']),
-                'uploadExtraData' => [
-                    'UploadFileData[saveLocationAlias]' => '',
-                    'UploadFileData[entityName]' => 'fileManager',
-                    'UploadFileData[entityId]' => 1,
-                ],
-                'overwriteInitial'=> false,
-                'maxFileCount' => 20
-            ]
+        <?= FileInputWidget::widget([
+            'entityName' => FileManagerModule::getId(),
+            'entityId' => '1',
+            'initialPreview' => $fileWebHelper
+                ->getFileInputInitialPreview($files),
+            'initialPreviewConfig' => $fileWebHelper
+                ->getFileInputInitialPreviewConfig($files),
         ]) ?>
     </div>
   </div>
