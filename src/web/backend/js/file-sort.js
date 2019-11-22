@@ -1,11 +1,12 @@
 $(document).ready(function () {
   $('.upload-file-form').on('filesorted', function(event, params) {
     console.log('File sorted ', params.previewId, params.oldIndex, params.newIndex, params.stack);
+    let url = params.stack[ params.newIndex ].url;
     $.ajax({
       url: '/dk-file-manager/file/sort',
       type: 'POST',
       data: JSON.stringify({
-        id: params.stack[ params.newIndex ].key,
+        id: url.substr(url.length - 1),
         name: params.stack[ params.newIndex ].caption,
         sort: params.newIndex,
       }),

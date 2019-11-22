@@ -53,27 +53,41 @@ class FileRepository extends AbstractActiveRecordRepository
 
     public function increaseFileSortByOne(
         string $entityName,
+        string $entityId,
         int $fromSort
-    ) {
-        Yii::$app->db
-            ->createCommand("UPDATE `dk_files` SET `sort`=`sort`+1 WHERE (`entity_name`='{$entityName}') AND (`sort` >= {$fromSort}) ORDER BY `sort` DESC ")
-            ->execute();
+    ): int {
+        $tableName = File::getTableSchema()->name;
+        $sql = <<<SQL
+        UPDATE `{$tableName}`
+        SET `{$tableName}`.`sort`=`{$tableName}`.`sort`+1
+        WHERE (`{$tableName}`.`entity_name`='{$entityName}')
+            AND (`{$tableName}`.`entity_id`='{$entityId}') AND (`{$tableName}`.`sort` >= {$fromSort})
+        ORDER BY `{$tableName}`.`sort` DESC
+        SQL;
+        return Yii::$app->db->createCommand($sql)->execute();
     }
 
-    public function moveFileToEnd(File $file)
+    public function moveFileToEnd(File $file): int
     {
         /** @var File $lastFile */
         $lastFile = File::find()
             ->where(['entity_name' => $file->entity_name])
             ->orderBy(['sort' => SORT_DESC])
             ->one();
-        if (! empty($lastFile)) {
+        if (! empty($lastFile) && $lastFile->id != $file->id) {
             $lastSort = $lastFile->sort++;
             /** @var File $movedFile */
             File::updateAllCounters(['sort' => $lastSort], ['id' => $file->id]);
-            Yii::$app->db
-                ->createCommand("UPDATE `dk_files` SET `sort`=`sort`-1 WHERE (`entity_name`='{$file->entity_name}') AND (`sort` >= {$file->sort}) ORDER BY `sort` ASC ")
-                ->execute();
+            $tableName = File::getTableSchema()->name;
+            $sql = <<<SQL
+            UPDATE `{$tableName}`
+            SET `{$tableName}`.`sort`=`{$tableName}`.`sort`-1
+            WHERE (`{$tableName}`.`entity_name`='{$file->entity_name}')
+                AND (`{$tableName}`.`entity_id`='{$file->entity_id}') AND (`{$tableName}`.`sort` >= {$file->sort}) 
+            ORDER BY `{$tableName}`.`sort` ASC
+            SQL;
+            return Yii::$app->db->createCommand($sql)->execute();
         }
+        return 0;
     }
 }

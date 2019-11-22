@@ -193,7 +193,7 @@ class FileActionService extends DBActionService
             $this->beginTransaction();
             $fileEntity = $this->_fileRepository->getFileById($form->fileId);
             $this->_fileRepository->moveFileToEnd($fileEntity);
-            $this->_fileRepository->increaseFileSortByOne($fileEntity->entity_name, $form->newSort);
+            $this->_fileRepository->increaseFileSortByOne($fileEntity->entity_name, $fileEntity->entity_id, $form->newSort);
             $fileEntity->sort = $form->newSort;
             $this->_fileRepository->save($fileEntity);
             $this->commitTransaction();;
