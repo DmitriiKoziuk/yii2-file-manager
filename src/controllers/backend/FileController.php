@@ -9,12 +9,15 @@ use yii\web\NotFoundHttpException;
 use yii\web\BadRequestHttpException;
 use yii\base\Module;
 use yii\filters\VerbFilter;
+use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\entities\File;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
+use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
 use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
 use DmitriiKoziuk\yii2FileManager\services\FileActionService;
 use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
+use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 
 /**
@@ -27,17 +30,24 @@ final class FileController extends Controller
      */
     private $_fileService;
 
+    /**
+     * @var FileRepository
+     */
+    private $fileRepository;
+
     private $_fileWebHelper;
 
     public function __construct(
         string $id,
         Module $module,
         FileActionService $fileService,
+        FileRepository $fileRepository,
         FileWebHelper $fileWebHelper,
         array $config = []
     ) {
         parent::__construct($id, $module, $config);
         $this->_fileService = $fileService;
+        $this->fileRepository = $fileRepository;
         $this->_fileWebHelper = $fileWebHelper;
     }
 
@@ -91,7 +101,14 @@ final class FileController extends Controller
      */
     public function actionCreate()
     {
-        return $this->render('create');
+        $files = $this->fileRepository->getEntityAllFiles(
+            FileManagerModule::getId(),
+            '1'
+        );
+        return $this->render('create', [
+            'fileWebHelper' => $this->_fileWebHelper,
+            'files' => $files,
+        ]);
     }
 
     public function actionUpdate($id)
@@ -129,6 +146,25 @@ final class FileController extends Controller
         }
 
         return true;
+    }
+
+    public function actionSort()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (Yii::$app->request->isPost) {
+            $data = Yii::$app->request->post();
+            $updateFileSortForm = new UpdateFileSortForm();
+            $updateFileSortForm->fileId = (int) $data['id'];
+            $updateFileSortForm->newSort = ++$data['sort'];
+            if ($updateFileSortForm->validate()) {
+                $this->_fileService->changeFileSort($updateFileSortForm);
+            }
+        }
+
+        return [
+            'status' => 'success',
+        ];
     }
 
     /**
