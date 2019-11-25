@@ -20,12 +20,13 @@ final class Bootstrap implements BootstrapInterface
      */
     public function bootstrap($app)
     {
-        ModuleRegistrationService::addModule(FileManagerModule::class, function () {
+        $container = Yii::$container;
+        ModuleRegistrationService::addModule(FileManagerModule::class, function () use ($container) {
             /** @var ConfigService $configService */
-            $configService = Yii::$container->get(ConfigService::class);
+            $configService = $container->get(ConfigService::class);
             return [
                 'class' => FileManagerModule::class,
-                'diContainer' => Yii::$container,
+                'diContainer' => $container,
                 'backendAppId' => $configService->getValue(
                     ConfigManagerModule::GENERAL_CONFIG_NAME,
                     'backendAppId'
