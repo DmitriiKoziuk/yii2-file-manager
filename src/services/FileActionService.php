@@ -138,7 +138,7 @@ class FileActionService extends DBActionService
                 }
                 $fileRecord->delete();
                 $this->_fileHelper->deleteFile($this->_fileHelper->getFileRecordFullPath($fileRecord));
-                $this->_decreaseForOneNextFilesSort($fileRecord);
+                $this->_fileRepository->decreaseFileSortByOne($fileRecord->entity_name, $fileRecord->entity_id, $fileRecord->sort);
                 $this->commitTransaction();
             } catch (\Throwable $e) {
                 $this->rollbackTransaction();
@@ -218,20 +218,5 @@ class FileActionService extends DBActionService
         $image->height  = $imageSource->getImageHeight();
         $this->_fileRepository->save($image);
         $imageSource->clear();
-    }
-
-    private function _decreaseForOneNextFilesSort(File $file)
-    {
-        File::updateAll(
-            [
-                'sort' => new Expression('sort - 1'),
-            ],
-            'entity_name = :entityName AND entity_id = :entityId AND sort > :sort',
-            [
-                ':entityName' => $file->entity_name,
-                ':entityId' => $file->entity_id,
-                ':sort' => $file->sort,
-            ]
-        );
     }
 }
