@@ -3,7 +3,7 @@ namespace DmitriiKoziuk\yii2FileManager\helpers;
 
 use yii\BaseYii;
 use yii\helpers\Inflector;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 
 class FileHelper
 {
@@ -127,7 +127,7 @@ class FileHelper
         return iterator_count($fi);
     }
 
-    public function getFileRecordFullPath(File $file)
+    public function getFileRecordFullPath(FileEntity $file)
     {
         return $this->_baseYii::getAlias($file->location_alias) .
             $this->_uploadFilePath .
@@ -141,7 +141,7 @@ class FileHelper
             $file->extension;
     }
 
-    public function getFileRecordWebPath(File $file)
+    public function getFileRecordWebPath(FileEntity $file)
     {
         $path = $this->_uploadFilePath .
             DIRECTORY_SEPARATOR .
@@ -155,7 +155,7 @@ class FileHelper
         return mb_substr($path, mb_strpos($path, '/web') + 4);
     }
 
-    public function getThumbnailsDirectoryPath(File $file, int $width, int $height, int $quality): string
+    public function getThumbnailsDirectoryPath(FileEntity $file, int $width, int $height, int $quality): string
     {
         return $this->_baseYii::getAlias($file->location_alias) .
             $this->thumbnailPath .
@@ -167,12 +167,12 @@ class FileHelper
             $file->entity_id;
     }
 
-    public function getThumbnailName(File $file): string
+    public function getThumbnailName(FileEntity $file): string
     {
         return $file->id . '.' . $file->extension;
     }
 
-    public function isThumbExist(File $file, int $width, int $height, int $quality): bool
+    public function isThumbExist(FileEntity $file, int $width, int $height, int $quality): bool
     {
         $thumb = $this->getThumbnailFullPath($file, $width, $height, $quality);
         if (file_exists($thumb)) {
@@ -181,14 +181,14 @@ class FileHelper
         return false;
     }
 
-    public function getThumbnailFullPath(File $file, int $width, int $height, int $quality)
+    public function getThumbnailFullPath(FileEntity $file, int $width, int $height, int $quality)
     {
         return $this->getThumbnailsDirectoryPath($file, $width, $height, $quality) .
             DIRECTORY_SEPARATOR .
             $this->getThumbnailName($file);
     }
 
-    public function getThumbnailWebPath(File $file, int $width, int $height, int $quality)
+    public function getThumbnailWebPath(FileEntity $file, int $width, int $height, int $quality)
     {
         $fullPath = $this->getThumbnailsDirectoryPath($file, $width, $height, $quality) .
             DIRECTORY_SEPARATOR .

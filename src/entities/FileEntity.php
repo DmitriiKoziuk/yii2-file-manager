@@ -30,7 +30,7 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
  *
  * @property Image $image
  */
-class File extends ActiveRecord
+class FileEntity extends ActiveRecord
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';

@@ -3,7 +3,7 @@ namespace DmitriiKoziuk\yii2FileManager\helpers;
 
 use yii\helpers\Url;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 
 class FileWebHelper
 {
@@ -16,16 +16,16 @@ class FileWebHelper
         $this->_uploadFileFolder = $uploadFileFolder;
     }
 
-    public function getFileFullWebPath(File $file): string
+    public function getFileFullWebPath(FileEntity $file): string
     {
-        if (File::FRONTEND_LOCATION_ALIAS == $file->location_alias) {
+        if (FileEntity::FRONTEND_LOCATION_ALIAS == $file->location_alias) {
             return $this->_frontendDomainName . $this->_getFileWebPath($file);
         } else {
             return $this->getFileFullWebPath($file);
         }
     }
 
-    private function _getFileWebPath(File $file): string
+    private function _getFileWebPath(FileEntity $file): string
     {
         $path = $this->_uploadFileFolder . '/' .
             $file->entity_name . '/' .
@@ -36,7 +36,7 @@ class FileWebHelper
     }
 
     /**
-     * @param File[] $files
+     * @param FileEntity[] $files
      * @return array
      * @throws \Exception
      */
@@ -50,7 +50,7 @@ class FileWebHelper
     }
 
     /**
-     * @param File[] $files
+     * @param FileEntity[] $files
      * @return array
      */
     public function getFileInputInitialPreviewConfig(array $files): array

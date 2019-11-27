@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'preview',
                 'content' => function ($model) use ($fileWebHelper) {
-                    /** @var \DmitriiKoziuk\yii2FileManager\entities\File $model */
+                    /** @var \DmitriiKoziuk\yii2FileManager\entities\FileEntity $model */
                     if (empty($model->image)) {
                         return '';
                     } else {

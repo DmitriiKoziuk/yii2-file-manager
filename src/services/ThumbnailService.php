@@ -5,7 +5,7 @@ namespace DmitriiKoziuk\yii2FileManager\services;
 use Exception;
 use Imagine\Image\Box;
 use yii\imagine\Image;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 
@@ -45,7 +45,7 @@ class ThumbnailService
      */
     public function thumbnail(int $fileId, int $width, int $height, int $quality = 65)
     {
-        /** @var File|null $fileEntity */
+        /** @var FileEntity|null $fileEntity */
         $fileEntity = $this->fileRepository->getFileById($fileId);
         if (empty($fileEntity)) {
             throw new Exception("File with id '{$fileId}' no exist.");
