@@ -7,11 +7,13 @@ use yii\web\UploadedFile;
 use yii\web\Application as WebApp;
 use yii\base\Application as BaseApp;
 use yii\console\Application as ConsoleApp;
+use yii\queue\cli\Queue;
 use DmitriiKoziuk\yii2ModuleManager\interfaces\ModuleInterface;
 use DmitriiKoziuk\yii2ModuleManager\ModuleManager;
 use DmitriiKoziuk\yii2ConfigManager\ConfigManagerModule;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 use DmitriiKoziuk\yii2FileManager\services\FileActionService;
+use DmitriiKoziuk\yii2FileManager\services\ThumbnailService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 
@@ -25,6 +27,11 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
      * @var Container
      */
     public $diContainer;
+
+    /**
+     * @var Queue
+     */
+    public $queue;
 
     /**
      * Overwrite this param if you backend app id is different from default.
@@ -44,6 +51,8 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
      */
     public $uploadFilePath;
 
+    public $imageThumbPath;
+
     /**
      * @throws \yii\base\InvalidConfigException
      * @throws \yii\di\NotInstantiableException
@@ -52,7 +61,6 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
     {
         /** @var BaseApp $app */
         $app = $this->module;
-        $app->request->parsers['application/json'] = 'yii\web\JsonParser';
         $this->_initLocalProperties($app);
         $this->_registerTranslation($app);
         $this->_registerClassesToDIContainer($app);
@@ -83,6 +91,7 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
     private function _initLocalProperties(BaseApp $app)
     {
         if ($app instanceof WebApp && $app->id == $this->backendAppId) {
+            $app->request->parsers['application/json'] = 'yii\web\JsonParser';
             $this->controllerNamespace = __NAMESPACE__ . '\controllers\backend';
         }
         if ($app instanceof ConsoleApp) {
@@ -94,6 +103,9 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
         if (empty($this->uploadFilePath)) {
             $this->uploadFilePath = DIRECTORY_SEPARATOR .
                 'web'. DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'files';
+        }
+        if (empty($this->imageThumbPath)) {
+            $this->imageThumbPath = DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . 'image-cache';
         }
         if (empty($this->backendAppId)) {
             throw new \InvalidArgumentException('Property backendAppId not set.');
@@ -120,23 +132,36 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
     private function _registerClassesToDIContainer(BaseApp $app): void
     {
         $this->diContainer->setSingleton(FileHelper::class, function () {
-            return new FileHelper(new BaseYii(), $this->uploadFilePath);
+            return new FileHelper(new BaseYii(), $this->uploadFilePath, $this->imageThumbPath);
         });
         $this->diContainer->setSingleton(FileRepository::class, function () {
             return new FileRepository();
         });
+        /** @var FileHelper $fileHelper */
+        $fileHelper = $this->diContainer->get(FileHelper::class);
         /** @var FileRepository $fileRepository */
         $fileRepository = $this->diContainer->get(FileRepository::class);
-        $this->diContainer->setSingleton(FileActionService::class, function () use ($fileRepository, $app) {
-            return new FileActionService(
-                new BaseYii(),
-                $this->uploadFilePath,
-                new FileHelper(new BaseYii(), $this->uploadFilePath),
-                new UploadedFile(),
-                $fileRepository,
-                $app->db
-            );
-        });
+        $this->diContainer->setSingleton(
+            FileActionService::class,
+            function () use ($fileRepository, $app, $fileHelper) {
+                return new FileActionService(
+                    new BaseYii(),
+                    $this->uploadFilePath,
+                    $fileHelper,
+                    new UploadedFile(),
+                    $fileRepository,
+                    $app->db
+                );
+            }
+        );
+        /** @var FileActionService $fileActionService */
+        $fileActionService = $this->diContainer->get(FileActionService::class);
+        $this->diContainer->setSingleton(
+            ThumbnailService::class,
+            function () use ($fileRepository, $fileHelper, $fileActionService) {
+                return new ThumbnailService($fileActionService, $fileRepository, $fileHelper);
+            }
+        );
         $this->diContainer->setSingleton(FileWebHelper::class, function () {
            return new FileWebHelper(
                $this->frontendDomainName,

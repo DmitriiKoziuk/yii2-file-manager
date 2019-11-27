@@ -3,6 +3,8 @@
 namespace DmitriiKoziuk\yii2FileManager;
 
 use Yii;
+use yii\queue\file\Queue;
+use yii\queue\LogBehavior;
 use yii\base\Application;
 use yii\base\BootstrapInterface;
 use yii\base\InvalidConfigException;
@@ -20,22 +22,35 @@ final class Bootstrap implements BootstrapInterface
      */
     public function bootstrap($app)
     {
+        $app->setComponents([
+            'dkFileManagerQueue' => [
+                'class' => Queue::class,
+                'path' => '@console/runtime/queue/dk-file-manager-queue',
+                'as log' => LogBehavior::class,
+            ],
+        ]);
+        $app->bootstrap[] = 'dkFileManagerQueue';
+        $queue = $app->get('dkFileManagerQueue');
         $container = Yii::$container;
-        ModuleRegistrationService::addModule(FileManagerModule::class, function () use ($container) {
-            /** @var ConfigService $configService */
-            $configService = $container->get(ConfigService::class);
-            return [
-                'class' => FileManagerModule::class,
-                'diContainer' => $container,
-                'backendAppId' => $configService->getValue(
-                    ConfigManagerModule::GENERAL_CONFIG_NAME,
-                    'backendAppId'
-                ),
-                'frontendDomainName' => $configService->getValue(
-                    ConfigManagerModule::GENERAL_CONFIG_NAME,
-                    'frontendDomainName'
-                ),
-            ];
-        });
+        ModuleRegistrationService::addModule(
+            FileManagerModule::class,
+            function () use ($container, $queue) {
+                /** @var ConfigService $configService */
+                $configService = $container->get(ConfigService::class);
+                return [
+                    'class' => FileManagerModule::class,
+                    'diContainer' => $container,
+                    'queue' => $queue,
+                    'backendAppId' => $configService->getValue(
+                        ConfigManagerModule::GENERAL_CONFIG_NAME,
+                        'backendAppId'
+                    ),
+                    'frontendDomainName' => $configService->getValue(
+                        ConfigManagerModule::GENERAL_CONFIG_NAME,
+                        'frontendDomainName'
+                    ),
+                ];
+            }
+        );
     }
 }
