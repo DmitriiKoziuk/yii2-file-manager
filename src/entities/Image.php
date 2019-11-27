@@ -2,7 +2,7 @@
 
 namespace DmitriiKoziuk\yii2FileManager\entities;
 
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use Yii;
 use yii\db\ActiveRecord;
 
@@ -14,7 +14,7 @@ use yii\db\ActiveRecord;
  * @property int    $height
  * @property string $alt
  *
- * @property File $file
+ * @property FileEntity $file
  */
 class Image extends ActiveRecord
 {
@@ -40,7 +40,7 @@ class Image extends ActiveRecord
                 ['file_id'],
                 'exist',
                 'skipOnError' => true,
-                'targetClass' => File::class,
+                'targetClass' => FileEntity::class,
                 'targetAttribute' => ['file_id' => 'id']
             ],
         ];
@@ -64,6 +64,6 @@ class Image extends ActiveRecord
      */
     public function getFile()
     {
-        return $this->hasOne(File::class, ['id' => 'file_id']);
+        return $this->hasOne(FileEntity::class, ['id' => 'file_id']);
     }
 }

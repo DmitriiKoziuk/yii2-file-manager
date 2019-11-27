@@ -11,7 +11,7 @@ use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
 use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\entities\Image;
 use DmitriiKoziuk\yii2FileManager\exceptions\FileNotFoundException;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
@@ -123,8 +123,8 @@ class FileActionService extends DBActionService
      */
     public function deleteFile($id): void
     {
-        /** @var File $fileRecord */
-        $fileRecord = File::find()
+        /** @var FileEntity $fileRecord */
+        $fileRecord = FileEntity::find()
             ->with(['image'])
             ->where(['id' => new Expression(':id')], [':id' => $id])
             ->one();
@@ -151,15 +151,15 @@ class FileActionService extends DBActionService
      * @param string $filePath
      * @param UploadedFile $uploadedFile
      * @param UploadFileData $data
-     * @return File
+     * @return FileEntity
      * @throws \DmitriiKoziuk\yii2Base\exceptions\ExternalComponentException
      * @throws \Throwable
      */
-    private function saveFileToDB(string $filePath, UploadedFile $uploadedFile, UploadFileData $data): File
+    private function saveFileToDB(string $filePath, UploadedFile $uploadedFile, UploadFileData $data): FileEntity
     {
         $this->beginTransaction();
         try {
-            $file                 = new File();
+            $file                 = new FileEntity();
             $file->entity_name    = $data->entityName;
             $file->entity_id      = $data->entityId;
             $file->location_alias = $data->saveLocationAlias;
@@ -170,7 +170,7 @@ class FileActionService extends DBActionService
             $file->extension      = $this->fileHelper->defineFileExtension($filePath);
             $file->size           = $uploadedFile->size;
             $file->title          = $uploadedFile->name;
-            $file->sort           = File::defineNextSortNumber($data->entityName, $data->entityId);
+            $file->sort           = $this->fileRepository->defineNextSortNumber($data->entityName, $data->entityId);
             $this->fileRepository->save($file);
             if ($this->fileHelper->isFileImage($filePath)) {
                 $this->saveImageToDB($file);
@@ -184,12 +184,12 @@ class FileActionService extends DBActionService
     }
 
     /**
-     * @param File $file
+     * @param FileEntity $file
      * @throws \DmitriiKoziuk\yii2Base\exceptions\EntityNotValidException
      * @throws \DmitriiKoziuk\yii2Base\exceptions\EntitySaveException
      * @throws \ImagickException
      */
-    private function saveImageToDB(File $file)
+    private function saveImageToDB(FileEntity $file)
     {
         $imageSource    = new Imagick($this->fileHelper->getFileRecordFullPath($file));
         $image          = new Image();

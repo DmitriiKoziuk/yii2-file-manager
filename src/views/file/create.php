@@ -5,12 +5,12 @@ use DmitriiKoziuk\yii2FileManager\assets\MainBackendFileUploadAsset;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\widgets\FileInputWidget;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 
 /**
  * @var $this yii\web\View
  * @var FileWebHelper $fileWebHelper
- * @var File[] $files
+ * @var FileEntity[] $files
  */
 
 $this->title = Yii::t(FileManagerModule::ID, 'Upload files');

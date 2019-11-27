@@ -3,22 +3,22 @@ namespace DmitriiKoziuk\yii2FileManager\repositories;
 
 use Yii;
 use DmitriiKoziuk\yii2Base\repositories\AbstractActiveRecordRepository;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 
 class FileRepository extends AbstractActiveRecordRepository
 {
     /**
      * @param string $entityName
      * @param string $entityId
-     * @return File[]
+     * @return FileEntity[]
      */
     public function getEntityAllFiles(string $entityName, string $entityId): array
     {
-        return File::find()
+        return FileEntity::find()
             ->with(['image'])
             ->where([
-                File::tableName() . '.entity_name' => $entityName,
-                File::tableName() . '.entity_id' => $entityId,
+                FileEntity::tableName() . '.entity_name' => $entityName,
+                FileEntity::tableName() . '.entity_id' => $entityId,
             ])
             ->orderBy('sort')
             ->all();
@@ -27,26 +27,26 @@ class FileRepository extends AbstractActiveRecordRepository
     /**
      * @param string $entityName
      * @param string $entityId
-     * @return File[]
+     * @return FileEntity[]
      */
     public function getEntityImages(string $entityName, string $entityId): array
     {
-        $files = File::find()
-            ->from([File::tableName() . ' FORCE INDEX (idx_dk_files_entity_type)'])
+        $files = FileEntity::find()
+            ->from([FileEntity::tableName() . ' FORCE INDEX (idx_dk_files_entity_type)'])
             ->with(['image'])
             ->where([
-                File::tableName() . '.entity_name' => $entityName,
-                File::tableName() . '.entity_id' => $entityId,
+                FileEntity::tableName() . '.entity_name' => $entityName,
+                FileEntity::tableName() . '.entity_id' => $entityId,
             ])
             ->orderBy('sort')
             ->indexBy('sort');
-        return $files->andWhere(['like', File::tableName() . '.mime_type', 'image%', false])->all();
+        return $files->andWhere(['like', FileEntity::tableName() . '.mime_type', 'image%', false])->all();
     }
 
-    public function getFileById(int $id): ?File
+    public function getFileById(int $id): ?FileEntity
     {
-        /** @var File|null $file */
-        $file = File::find()
+        /** @var FileEntity|null $file */
+        $file = FileEntity::find()
             ->where(['id' => $id])
             ->one();
         return $file;
@@ -57,7 +57,7 @@ class FileRepository extends AbstractActiveRecordRepository
         string $entityId,
         int $fromSort
     ): int {
-        $tableName = File::getTableSchema()->name;
+        $tableName = FileEntity::getTableSchema()->name;
         $sql = <<<SQL
         UPDATE `{$tableName}`
         SET `{$tableName}`.`sort`=`{$tableName}`.`sort`+1
@@ -73,7 +73,7 @@ class FileRepository extends AbstractActiveRecordRepository
         string $entityId,
         int $fromSort
     ): int {
-        $tableName = File::getTableSchema()->name;
+        $tableName = FileEntity::getTableSchema()->name;
         $sql = <<<SQL
         UPDATE `{$tableName}`
         SET `{$tableName}`.`sort`=`{$tableName}`.`sort`-1
@@ -84,19 +84,28 @@ class FileRepository extends AbstractActiveRecordRepository
         return Yii::$app->db->createCommand($sql)->execute();
     }
 
-    public function moveFileToEnd(File $file): int
+    public function moveFileToEnd(FileEntity $file): int
     {
-        /** @var File $lastFile */
-        $lastFile = File::find()
+        /** @var FileEntity $lastFile */
+        $lastFile = FileEntity::find()
             ->where(['entity_name' => $file->entity_name])
             ->orderBy(['sort' => SORT_DESC])
             ->one();
         if (! empty($lastFile) && $lastFile->id != $file->id) {
             $lastSort = $lastFile->sort++;
-            /** @var File $movedFile */
-            File::updateAllCounters(['sort' => $lastSort], ['id' => $file->id]);
+            /** @var FileEntity $movedFile */
+            FileEntity::updateAllCounters(['sort' => $lastSort], ['id' => $file->id]);
             return $this->decreaseFileSortByOne($file->entity_name, $file->entity_id, $file->sort);
         }
         return 0;
+    }
+
+    public function defineNextSortNumber(string $entityName, int $entityID): int
+    {
+        $count = (int) FileEntity::find()->where([
+            'entity_name' => $entityName,
+            'entity_id'   => $entityID,
+        ])->count();
+        return ++$count;
     }
 }

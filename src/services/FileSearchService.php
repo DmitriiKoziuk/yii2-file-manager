@@ -2,14 +2,14 @@
 namespace DmitriiKoziuk\yii2FileManager\services;
 
 use yii\data\ActiveDataProvider;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
 
 class FileSearchService
 {
     public function searchBy(FileSearchForm $params): ActiveDataProvider
     {
-        $query = File::find();
+        $query = FileEntity::find();
 
         // add conditions that should always apply here
 

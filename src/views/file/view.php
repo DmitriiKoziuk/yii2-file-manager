@@ -6,7 +6,7 @@ use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2Base\BaseModule as BaseModule;
 
 /* @var $this yii\web\View */
-/* @var $model \DmitriiKoziuk\yii2FileManager\entities\File */
+/* @var $model \DmitriiKoziuk\yii2FileManager\entities\FileEntity */
 
 $this->title = $model->title;
 $this->params['breadcrumbs'][] = ['label' => Yii::t(FileManagerModule::ID, 'Files'), 'url' => ['index']];

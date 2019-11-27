@@ -30,7 +30,7 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
  *
  * @property Image $image
  */
-class File extends ActiveRecord
+class FileEntity extends ActiveRecord
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
@@ -119,15 +119,6 @@ class File extends ActiveRecord
     public function getImage()
     {
         return $this->hasOne(Image::class, ['file_id' => 'id']);
-    }
-
-    public static function defineNextSortNumber(string $entityName, int $entityID): int
-    {
-        $count = (int) self::find()->where([
-            'entity_name' => $entityName,
-            'entity_id'   => $entityID,
-        ])->count();
-        return ++$count;
     }
 
     public function getThumbnail(int $width, int $height, int $quality = 65): string
