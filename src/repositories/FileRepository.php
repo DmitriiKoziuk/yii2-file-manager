@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace DmitriiKoziuk\yii2FileManager\repositories;
 
 use Yii;
@@ -15,7 +16,6 @@ class FileRepository extends AbstractActiveRecordRepository
     public function getEntityAllFiles(string $entityName, string $entityId): array
     {
         return FileEntity::find()
-            ->with(['image'])
             ->where([
                 FileEntity::tableName() . '.entity_name' => $entityName,
                 FileEntity::tableName() . '.entity_id' => $entityId,
@@ -32,8 +32,6 @@ class FileRepository extends AbstractActiveRecordRepository
     public function getEntityImages(string $entityName, string $entityId): array
     {
         $files = FileEntity::find()
-            ->from([FileEntity::tableName() . ' FORCE INDEX (idx_dk_files_entity_type)'])
-            ->with(['image'])
             ->where([
                 FileEntity::tableName() . '.entity_name' => $entityName,
                 FileEntity::tableName() . '.entity_id' => $entityId,
