@@ -207,7 +207,7 @@ class FileHelper
         return mime_content_type($file);
     }
 
-    public function isFileImage(string $file)
+    public function isImage(string $file)
     {
         return preg_match('/^image\/.*$/', $this->getFileMimeType($file));
     }
