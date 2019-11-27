@@ -50,7 +50,7 @@ class ThumbnailService
         if (empty($fileEntity)) {
             throw new Exception("File with id '{$fileId}' no exist.");
         }
-        if (empty($fileEntity->image)) {
+        if (! $fileEntity->isImage()) {
             throw new Exception("File with id '{$fileId}' not image.");
         }
         $originalImage = $this->fileHelper->getFileRecordFullPath($fileEntity);
