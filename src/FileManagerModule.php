@@ -1,11 +1,16 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace DmitriiKoziuk\yii2FileManager;
 
+use InvalidArgumentException;
 use yii\BaseYii;
 use yii\di\Container;
+use yii\di\NotInstantiableException;
 use yii\web\UploadedFile;
 use yii\web\Application as WebApp;
 use yii\base\Application as BaseApp;
+use yii\base\Module;
+use yii\base\InvalidConfigException;
 use yii\console\Application as ConsoleApp;
 use yii\queue\cli\Queue;
 use DmitriiKoziuk\yii2ModuleManager\interfaces\ModuleInterface;
@@ -17,7 +22,7 @@ use DmitriiKoziuk\yii2FileManager\services\ThumbnailService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 
-final class FileManagerModule extends \yii\base\Module implements ModuleInterface
+final class FileManagerModule extends Module implements ModuleInterface
 {
     const ID = 'dk-file-manager';
 
@@ -51,11 +56,14 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
      */
     public $uploadFilePath;
 
+    /**
+     * @var string
+     */
     public $imageThumbPath;
 
     /**
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\di\NotInstantiableException
+     * @throws InvalidConfigException
+     * @throws NotInstantiableException
      */
     public function init()
     {
@@ -86,7 +94,7 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
 
     /**
      * @param BaseApp $app
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     private function _initLocalProperties(BaseApp $app)
     {
@@ -108,10 +116,10 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
             $this->imageThumbPath = DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . 'image-cache';
         }
         if (empty($this->backendAppId)) {
-            throw new \InvalidArgumentException('Property backendAppId not set.');
+            throw new InvalidArgumentException('Property backendAppId not set.');
         }
         if (empty($this->frontendDomainName)) {
-            throw new \InvalidArgumentException('Frontend domain name not set.');
+            throw new InvalidArgumentException('Frontend domain name not set.');
         }
     }
 
@@ -126,8 +134,8 @@ final class FileManagerModule extends \yii\base\Module implements ModuleInterfac
 
     /**
      * @param BaseApp $app
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\di\NotInstantiableException
+     * @throws InvalidConfigException
+     * @throws NotInstantiableException
      */
     private function _registerClassesToDIContainer(BaseApp $app): void
     {
