@@ -121,15 +121,6 @@ class File extends ActiveRecord
         return $this->hasOne(Image::class, ['file_id' => 'id']);
     }
 
-    public static function defineNextSortNumber(string $entityName, int $entityID): int
-    {
-        $count = (int) self::find()->where([
-            'entity_name' => $entityName,
-            'entity_id'   => $entityID,
-        ])->count();
-        return ++$count;
-    }
-
     public function getThumbnail(int $width, int $height, int $quality = 65): string
     {
         if ($this->fileHelper->isThumbExist($this, $width, $height, $quality)) {

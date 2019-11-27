@@ -170,7 +170,7 @@ class FileActionService extends DBActionService
             $file->extension      = $this->fileHelper->defineFileExtension($filePath);
             $file->size           = $uploadedFile->size;
             $file->title          = $uploadedFile->name;
-            $file->sort           = File::defineNextSortNumber($data->entityName, $data->entityId);
+            $file->sort           = $this->fileRepository->defineNextSortNumber($data->entityName, $data->entityId);
             $this->fileRepository->save($file);
             if ($this->fileHelper->isFileImage($filePath)) {
                 $this->saveImageToDB($file);

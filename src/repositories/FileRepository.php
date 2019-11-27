@@ -99,4 +99,13 @@ class FileRepository extends AbstractActiveRecordRepository
         }
         return 0;
     }
+
+    public function defineNextSortNumber(string $entityName, int $entityID): int
+    {
+        $count = (int) File::find()->where([
+            'entity_name' => $entityName,
+            'entity_id'   => $entityID,
+        ])->count();
+        return ++$count;
+    }
 }
