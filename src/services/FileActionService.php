@@ -12,7 +12,6 @@ use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
 use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
-use DmitriiKoziuk\yii2FileManager\entities\Image;
 use DmitriiKoziuk\yii2FileManager\exceptions\FileNotFoundException;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 
@@ -125,7 +124,6 @@ class FileActionService extends DBActionService
     {
         /** @var FileEntity $fileRecord */
         $fileRecord = FileEntity::find()
-            ->with(['image'])
             ->where(['id' => new Expression(':id')], [':id' => $id])
             ->one();
         if (empty($fileRecord)) {
@@ -133,9 +131,6 @@ class FileActionService extends DBActionService
         } else {
             $this->beginTransaction();
             try {
-                if (! empty($fileRecord->image)) {
-                    $fileRecord->image->delete();
-                }
                 $fileRecord->delete();
                 $this->fileHelper->deleteFile($this->fileHelper->getFileRecordFullPath($fileRecord));
                 $this->fileRepository->decreaseFileSortByOne($fileRecord->entity_name, $fileRecord->entity_id, $fileRecord->sort);
@@ -169,35 +164,20 @@ class FileActionService extends DBActionService
             );
             $file->extension      = $this->fileHelper->defineFileExtension($filePath);
             $file->size           = $uploadedFile->size;
-            $file->title          = $uploadedFile->name;
             $file->sort           = $this->fileRepository->defineNextSortNumber($data->entityName, $data->entityId);
-            $this->fileRepository->save($file);
-            if ($this->fileHelper->isFileImage($filePath)) {
-                $this->saveImageToDB($file);
+            if ($this->fileHelper->isImage($filePath)) {
+                $imageSource    = new Imagick($this->fileHelper->getFileRecordFullPath($file));
+                $file->width   = $imageSource->getImageWidth();
+                $file->height  = $imageSource->getImageHeight();
+                $imageSource->clear();
             }
+            $this->fileRepository->save($file);
             $this->commitTransaction();
             return $file;
         } catch (\Throwable $e) {
             $this->rollbackTransaction();
             throw $e;
         }
-    }
-
-    /**
-     * @param FileEntity $file
-     * @throws \DmitriiKoziuk\yii2Base\exceptions\EntityNotValidException
-     * @throws \DmitriiKoziuk\yii2Base\exceptions\EntitySaveException
-     * @throws \ImagickException
-     */
-    private function saveImageToDB(FileEntity $file)
-    {
-        $imageSource    = new Imagick($this->fileHelper->getFileRecordFullPath($file));
-        $image          = new Image();
-        $image->file_id = $file->id;
-        $image->width   = $imageSource->getImageWidth();
-        $image->height  = $imageSource->getImageHeight();
-        $this->fileRepository->save($image);
-        $imageSource->clear();
     }
 
     /**

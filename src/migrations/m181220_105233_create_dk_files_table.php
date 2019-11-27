@@ -1,14 +1,15 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace DmitriiKoziuk\yii2FileManager\migrations;
 
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `dk_files`.
+ * Handles the creation of table `dk_fm_files`.
  */
 class m181220_105233_create_dk_files_table extends Migration
 {
-    private $dkFilesTableName = '{{%dk_files}}';
+    private $dkFilesTableName = '{{%dk_fm_files}}';
 
     /**
      * {@inheritdoc}
@@ -32,14 +33,17 @@ class m181220_105233_create_dk_files_table extends Migration
             'extension'      => $this->string(10)->notNull(),
             'size'           => $this->integer()->unsigned()->notNull()
                 ->comment('In bytes.'),
-            'title'          => $this->string(255)->notNull(),
-            'sort'           => $this->integer()->unsigned()->notNull(),
+            'sort'           => $this->smallInteger()->unsigned()->notNull(),
+            'width'          => $this->smallInteger()->unsigned()->null()->defaultValue(NULL),
+            'height'         => $this->smallInteger()->unsigned()->null()->defaultValue(NULL),
+            'alt'            => $this->string(255)->null()->defaultValue(NULL),
+            'title'          => $this->string(255)->null()->defaultValue(NULL),
             'created_at'     => $this->integer()->unsigned()->notNull(),
             'updated_at'     => $this->integer()->unsigned()->notNull(),
         ], $tableOptions);
 
         $this->createIndex(
-            'idx_dk_files_sort',
+            'dk_fm_files_idx_sort',
             $this->dkFilesTableName,
             [
                 'entity_name',
@@ -49,21 +53,33 @@ class m181220_105233_create_dk_files_table extends Migration
             true
         );
         $this->createIndex(
-            'idx_dk_files_name',
+            'dk_fm_files_idx_name',
             $this->dkFilesTableName,
             [
                 'name',
                 'extension',
             ]
         );
-
         $this->createIndex(
-            'idx_dk_files_entity_type',
+            'dk_fm_files_idx_entity_type',
             $this->dkFilesTableName,
             [
                 'entity_name',
                 'entity_id',
                 'mime_type'
+            ]
+        );
+        $this->createIndex(
+            'dk_fm_files_idx_mime_type',
+            $this->dkFilesTableName,
+            'mime_type'
+        );
+        $this->createIndex(
+            'dk_fm_files_idx_image_orientation',
+            $this->dkFilesTableName,
+            [
+                'width',
+                'height',
             ]
         );
     }
