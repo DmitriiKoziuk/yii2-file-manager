@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DmitriiKoziuk\yii2FileManager\controllers\backend;
 
@@ -35,6 +35,9 @@ final class FileController extends Controller
      */
     private $fileRepository;
 
+    /**
+     * @var FileWebHelper
+     */
     private $_fileWebHelper;
 
     public function __construct(
