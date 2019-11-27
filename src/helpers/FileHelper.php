@@ -11,10 +11,13 @@ class FileHelper
 
     private $_uploadFilePath;
 
-    public function __construct(BaseYii $baseYii, string $uploadFilePath)
+    private $thumbnailPath;
+
+    public function __construct(BaseYii $baseYii, string $uploadFilePath, string $thumbnailPath)
     {
         $this->_baseYii = $baseYii;
         $this->_uploadFilePath = $uploadFilePath;
+        $this->thumbnailPath = $thumbnailPath;
     }
 
     /**
@@ -149,7 +152,48 @@ class FileHelper
             $file->name .
             '.' .
             $file->extension;
-        return str_replace('/web', '', $path);
+        return mb_substr($path, mb_strpos($path, '/web') + 4);
+    }
+
+    public function getThumbnailsDirectoryPath(File $file, int $width, int $height, int $quality): string
+    {
+        return $this->_baseYii::getAlias($file->location_alias) .
+            $this->thumbnailPath .
+            DIRECTORY_SEPARATOR .
+            $width . 'x' . $height . '-' . $quality .
+            DIRECTORY_SEPARATOR .
+            $file->entity_name .
+            DIRECTORY_SEPARATOR .
+            $file->entity_id;
+    }
+
+    public function getThumbnailName(File $file): string
+    {
+        return $file->id . '.' . $file->extension;
+    }
+
+    public function isThumbExist(File $file, int $width, int $height, int $quality): bool
+    {
+        $thumb = $this->getThumbnailFullPath($file, $width, $height, $quality);
+        if (file_exists($thumb)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getThumbnailFullPath(File $file, int $width, int $height, int $quality)
+    {
+        return $this->getThumbnailsDirectoryPath($file, $width, $height, $quality) .
+            DIRECTORY_SEPARATOR .
+            $this->getThumbnailName($file);
+    }
+
+    public function getThumbnailWebPath(File $file, int $width, int $height, int $quality)
+    {
+        $fullPath = $this->getThumbnailsDirectoryPath($file, $width, $height, $quality) .
+            DIRECTORY_SEPARATOR .
+            $this->getThumbnailName($file);
+        return mb_substr($fullPath, mb_strpos($fullPath, '/web') + 4);
     }
 
     public function getFileMimeType(string $file)

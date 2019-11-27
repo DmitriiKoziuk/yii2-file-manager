@@ -68,6 +68,22 @@ class FileRepository extends AbstractActiveRecordRepository
         return Yii::$app->db->createCommand($sql)->execute();
     }
 
+    public function decreaseFileSortByOne(
+        string $entityName,
+        string $entityId,
+        int $fromSort
+    ): int {
+        $tableName = File::getTableSchema()->name;
+        $sql = <<<SQL
+        UPDATE `{$tableName}`
+        SET `{$tableName}`.`sort`=`{$tableName}`.`sort`-1
+        WHERE (`{$tableName}`.`entity_name`='{$entityName}')
+            AND (`{$tableName}`.`entity_id`='{$entityId}') AND (`{$tableName}`.`sort` >= {$fromSort}) 
+        ORDER BY `{$tableName}`.`sort` ASC
+        SQL;
+        return Yii::$app->db->createCommand($sql)->execute();
+    }
+
     public function moveFileToEnd(File $file): int
     {
         /** @var File $lastFile */
@@ -79,15 +95,7 @@ class FileRepository extends AbstractActiveRecordRepository
             $lastSort = $lastFile->sort++;
             /** @var File $movedFile */
             File::updateAllCounters(['sort' => $lastSort], ['id' => $file->id]);
-            $tableName = File::getTableSchema()->name;
-            $sql = <<<SQL
-            UPDATE `{$tableName}`
-            SET `{$tableName}`.`sort`=`{$tableName}`.`sort`-1
-            WHERE (`{$tableName}`.`entity_name`='{$file->entity_name}')
-                AND (`{$tableName}`.`entity_id`='{$file->entity_id}') AND (`{$tableName}`.`sort` >= {$file->sort}) 
-            ORDER BY `{$tableName}`.`sort` ASC
-            SQL;
-            return Yii::$app->db->createCommand($sql)->execute();
+            return $this->decreaseFileSortByOne($file->entity_name, $file->entity_id, $file->sort);
         }
         return 0;
     }

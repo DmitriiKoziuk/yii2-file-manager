@@ -21,3 +21,9 @@ The preferred way to install this extension is through [composer](http://getcomp
     ```
     /path/to/php-bin/php /path/to/yii-application/yii migrate
     ```
+   
+## Console commands
+
+```
+php yii dk-file-manager-queue/info
+```

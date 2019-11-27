@@ -3,9 +3,14 @@
 namespace DmitriiKoziuk\yii2FileManager\entities;
 
 use Yii;
+use yii\queue\cli\Queue;
 use yii\db\ActiveRecord;
+use yii\di\NotInstantiableException;
+use yii\base\InvalidConfigException;
 use yii\behaviors\TimestampBehavior;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
+use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
 
 /**
  * This is the model class for table "{{%dk_files}}".
@@ -29,6 +34,16 @@ class File extends ActiveRecord
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
+
+    /**
+     * @var FileHelper
+     */
+    private $fileHelper;
+
+    /**
+     * @var Queue
+     */
+    private $queue;
 
     /**
      * {@inheritdoc}
@@ -88,6 +103,17 @@ class File extends ActiveRecord
     }
 
     /**
+     * @throws InvalidConfigException
+     * @throws NotInstantiableException
+     */
+    public function init()
+    {
+        parent::init();
+        $this->fileHelper = Yii::$container->get(FileHelper::class);
+        $this->queue = Yii::$app->dkFileManagerQueue;
+    }
+
+    /**
      * @return \yii\db\ActiveQuery
      */
     public function getImage()
@@ -102,5 +128,19 @@ class File extends ActiveRecord
             'entity_id'   => $entityID,
         ])->count();
         return ++$count;
+    }
+
+    public function getThumbnail(int $width, int $height, int $quality = 65): string
+    {
+        if ($this->fileHelper->isThumbExist($this, $width, $height, $quality)) {
+            return $this->fileHelper->getThumbnailWebPath($this, $width, $height, $quality);
+        }
+        $this->queue->push(new ThumbnailImagesJob([
+            'fileId' => $this->id,
+            'width' => $width,
+            'height' => $height,
+            'quality' => $quality,
+        ]));
+        return $this->fileHelper->getFileRecordWebPath($this);
     }
 }
