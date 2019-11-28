@@ -1,14 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DmitriiKoziuk\yii2FileManager\entities;
 
 use Yii;
+use yii\queue\cli\Queue;
 use yii\db\ActiveRecord;
+use yii\di\NotInstantiableException;
+use yii\base\InvalidConfigException;
 use yii\behaviors\TimestampBehavior;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
+use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
 
 /**
- * This is the model class for table "{{%dk_files}}".
+ * This is the model class for table "{{%dk_fm_files}}".
  *
  * @property int    $id
  * @property string $entity_name
@@ -18,24 +23,35 @@ use DmitriiKoziuk\yii2FileManager\FileManagerModule;
  * @property string $name File name without extension.
  * @property string $extension
  * @property int    $size In bytes.
- * @property string $title
  * @property int    $sort
+ * @property int    $width
+ * @property int    $height
+ * @property string $alt
+ * @property string $title
  * @property int    $created_at
  * @property int    $updated_at
- *
- * @property Image $image
  */
-class File extends ActiveRecord
+class FileEntity extends ActiveRecord
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
+
+    /**
+     * @var FileHelper
+     */
+    private $fileHelper;
+
+    /**
+     * @var Queue
+     */
+    private $queue;
 
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return '{{%dk_files}}';
+        return '{{%dk_fm_files}}';
     }
 
     public function behaviors()
@@ -51,13 +67,14 @@ class File extends ActiveRecord
     public function rules()
     {
         return [
-            [['entity_name', 'entity_id', 'location_alias', 'mime_type', 'title'], 'required'],
-            [['size', 'sort', 'created_at', 'updated_at'], 'integer'],
+            [['entity_name', 'entity_id', 'location_alias', 'mime_type'], 'required'],
+            [['size', 'sort', 'width', 'height', 'created_at', 'updated_at'], 'integer'],
             [['entity_name', 'entity_id'], 'string', 'max' => 45],
             [['location_alias', 'mime_type'], 'string', 'max' => 25],
-            [['title'], 'string', 'max' => 255],
             [['name'], 'string', 'max' => 155],
+            [['alt', 'title'], 'string', 'max' => 255],
             [['extension'], 'string', 'max' => 10],
+            [['width', 'height', 'alt', 'title'], 'default', 'value' => null],
             [
                 ['entity_name', 'entity_id', 'sort'],
                 'unique',
@@ -80,27 +97,43 @@ class File extends ActiveRecord
             'name'           => Yii::t(FileManagerModule::ID, 'Name'),
             'extension'      => Yii::t(FileManagerModule::ID, 'Extension'),
             'size'           => Yii::t(FileManagerModule::ID, 'Size'),
-            'title'          => Yii::t(FileManagerModule::ID, 'Title'),
             'sort'           => Yii::t(FileManagerModule::ID, 'Sort'),
+            'width'          => Yii::t(FileManagerModule::ID, 'Width'),
+            'height'         => Yii::t(FileManagerModule::ID, 'Height'),
+            'alt'            => Yii::t(FileManagerModule::ID, 'Alt'),
+            'title'          => Yii::t(FileManagerModule::ID, 'Title'),
             'created_at'     => Yii::t(FileManagerModule::ID, 'Created at'),
             'updated_at'     => Yii::t(FileManagerModule::ID, 'Updated at'),
         ];
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @throws InvalidConfigException
+     * @throws NotInstantiableException
      */
-    public function getImage()
+    public function init()
     {
-        return $this->hasOne(Image::class, ['file_id' => 'id']);
+        parent::init();
+        $this->fileHelper = Yii::$container->get(FileHelper::class);
+        $this->queue = Yii::$app->dkFileManagerQueue;
     }
 
-    public static function defineNextSortNumber(string $entityName, int $entityID): int
+    public function isImage(): bool
     {
-        $count = (int) self::find()->where([
-            'entity_name' => $entityName,
-            'entity_id'   => $entityID,
-        ])->count();
-        return ++$count;
+        return (bool) preg_match('/^image\/.*$/', $this->mime_type);
+    }
+
+    public function getThumbnail(int $width, int $height, int $quality = 65): string
+    {
+        if ($this->fileHelper->isThumbExist($this, $width, $height, $quality)) {
+            return $this->fileHelper->getThumbnailWebPath($this, $width, $height, $quality);
+        }
+        $this->queue->push(new ThumbnailImagesJob([
+            'fileId' => $this->id,
+            'width' => $width,
+            'height' => $height,
+            'quality' => $quality,
+        ]));
+        return $this->fileHelper->getFileRecordWebPath($this);
     }
 }

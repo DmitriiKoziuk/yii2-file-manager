@@ -5,7 +5,7 @@ use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2Base\BaseModule as BaseModule;
 
 /* @var $this yii\web\View */
-/* @var $model \DmitriiKoziuk\yii2FileManager\entities\File */
+/* @var $model \DmitriiKoziuk\yii2FileManager\entities\FileEntity */
 
 $this->title = Yii::t(FileManagerModule::ID, 'Update File: {name}', [
     'name' => $model->name,

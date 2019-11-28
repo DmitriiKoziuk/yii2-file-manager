@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DmitriiKoziuk\yii2FileManager\controllers\backend;
 
@@ -10,7 +10,7 @@ use yii\web\BadRequestHttpException;
 use yii\base\Module;
 use yii\filters\VerbFilter;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
-use DmitriiKoziuk\yii2FileManager\entities\File;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
 use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
@@ -35,6 +35,9 @@ final class FileController extends Controller
      */
     private $fileRepository;
 
+    /**
+     * @var FileWebHelper
+     */
     private $_fileWebHelper;
 
     public function __construct(
@@ -171,12 +174,12 @@ final class FileController extends Controller
      * Finds the File model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return File the loaded model
+     * @return FileEntity the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = File::findOne($id)) !== null) {
+        if (($model = FileEntity::findOne($id)) !== null) {
             return $model;
         }
 
