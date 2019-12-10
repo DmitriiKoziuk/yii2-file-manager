@@ -36,7 +36,7 @@ class FileHelper
      * @param string $path
      * @throws Exception
      */
-    public function createDirectory(string $path): void
+    public function createDirectoryIfNotExist(string $path): void
     {
         if (! file_exists($path)) {
             if (! mkdir($path, 0755, true)) {
