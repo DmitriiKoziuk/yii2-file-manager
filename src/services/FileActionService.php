@@ -1,4 +1,5 @@
 <?php
+
 namespace DmitriiKoziuk\yii2FileManager\services;
 
 use Imagick;
@@ -6,17 +7,22 @@ use yii\BaseYii;
 use yii\db\Connection;
 use yii\db\Expression;
 use yii\web\UploadedFile;
+use DmitriiKoziuk\yii2Base\traits\ModelValidatorTrait;
 use DmitriiKoziuk\yii2Base\services\DBActionService;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
 use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
+use DmitriiKoziuk\yii2FileManager\forms\FetchFileForm;
 use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\exceptions\FileNotFoundException;
 use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
+use DmitriiKoziuk\yii2FileManager\interfaces\SaveFileInterface;
 
 class FileActionService extends DBActionService
 {
+    use ModelValidatorTrait;
+
     /**
      * @var array
      */
@@ -68,45 +74,39 @@ class FileActionService extends DBActionService
      */
     public function saveUploadedFiles(UploadFileForm $form, UploadFileData $data): array
     {
-        $saveLocation = $this->baseYii::getAlias($data->saveLocationAlias);
-        $saveTo = $saveLocation .
-            $this->uploadFolder .
-            DIRECTORY_SEPARATOR .
-            $data->entityName .
-            DIRECTORY_SEPARATOR .
-            $data->entityId;
-        $this->fileHelper->createDirectory($saveTo);
+        $fileDirectory = $this->getFileDirectory($data);
+        $this->fileHelper->createDirectoryIfNotExist($fileDirectory);
         /** @var UploadedFile $uploadedFile */
         $uploadedFiles = $this->uploadedFile->getInstances($form, 'upload');
         if (empty($uploadedFiles)) {
             throw new \Exception('Cant find uploaded files.');
         }
         foreach ($uploadedFiles as $uploadedFile) {
-            if (empty($data->name) || 'null' === $data->name) {
-                $fileName = $this->fileHelper->prepareFilename($uploadedFile->name);
-            } else {
+            if ($data->isRenameFile()) {
                 $fileName = $this->fileHelper->prepareFilename(
-                    $data->name .
+                    $data->getNewFileName() .
                     '.' .
                     $this->fileHelper->defineFileExtension($uploadedFile->name)
                 );
+            } else {
+                $fileName = $this->fileHelper->prepareFilename($uploadedFile->name);
             }
-            $fullPath = $saveTo . DIRECTORY_SEPARATOR . $fileName;
-            if (file_exists($fullPath)) {
+            $file = $fileDirectory . DIRECTORY_SEPARATOR . $fileName;
+            if (file_exists($file)) {
                 $fileName = $this->fileHelper->defineFileNameWithNumber(
                     $fileName,
-                    ($this->fileHelper->countFilesInDirectory($saveTo) + 1)
+                    ($this->fileHelper->countFilesInDirectory($fileDirectory) + 1)
                 );
-                $fullPath = $saveTo . DIRECTORY_SEPARATOR . $fileName;
+                $file = $fileDirectory . DIRECTORY_SEPARATOR . $fileName;
             }
-            if (! $uploadedFile->saveAs($fullPath)) {
-                throw new \Exception("Cant save file '{$fileName}' to folder '{$saveTo}'");
+            if (! $uploadedFile->saveAs($file)) {
+                throw new \Exception("Cant save file '{$fileName}' to folder '{$fileDirectory}'");
             }
             try {
-                $file = $this->saveFileToDB($fullPath, $uploadedFile, $data);
+                $file = $this->saveFileToDB($file, $data);
                 $this->uploadedFiles[] = $file;
             } catch (\Throwable $e) {
-                $this->fileHelper->deleteFile($fullPath);
+                $this->fileHelper->deleteFile($file);
                 break;
             }
         }
@@ -144,31 +144,33 @@ class FileActionService extends DBActionService
 
     /**
      * @param string $filePath
-     * @param UploadedFile $uploadedFile
-     * @param UploadFileData $data
+     * @param SaveFileInterface $saveFileToDB
      * @return FileEntity
      * @throws \DmitriiKoziuk\yii2Base\exceptions\ExternalComponentException
      * @throws \Throwable
      */
-    private function saveFileToDB(string $filePath, UploadedFile $uploadedFile, UploadFileData $data): FileEntity
+    private function saveFileToDB(string $filePath, SaveFileInterface $saveFileToDB): FileEntity
     {
         $this->beginTransaction();
         try {
             $file                 = new FileEntity();
-            $file->entity_name    = $data->entityName;
-            $file->entity_id      = $data->entityId;
-            $file->location_alias = $data->saveLocationAlias;
+            $file->entity_name    = $saveFileToDB->getEntityName();
+            $file->entity_id      = $saveFileToDB->getEntityId();
+            $file->location_alias = $saveFileToDB->getSaveLocationAlias();
             $file->mime_type      = $this->fileHelper->getFileMimeType($filePath);
             $file->name           = $this->fileHelper->defineFileNameWithoutExtension(
                 $this->fileHelper->defineFileNameFromPath($filePath)
             );
             $file->extension      = $this->fileHelper->defineFileExtension($filePath);
-            $file->size           = $uploadedFile->size;
-            $file->sort           = $this->fileRepository->defineNextSortNumber($data->entityName, $data->entityId);
+            $file->size           = filesize($filePath);
+            $file->sort           = $this->fileRepository->defineNextSortNumber(
+                $saveFileToDB->getEntityName(),
+                $saveFileToDB->getEntityId()
+            );
             if ($this->fileHelper->isImage($filePath)) {
-                $imageSource    = new Imagick($this->fileHelper->getFileRecordFullPath($file));
-                $file->width   = $imageSource->getImageWidth();
-                $file->height  = $imageSource->getImageHeight();
+                $imageSource  = new Imagick($this->fileHelper->getFileRecordFullPath($file));
+                $file->width  = $imageSource->getImageWidth();
+                $file->height = $imageSource->getImageHeight();
                 $imageSource->clear();
             }
             $this->fileRepository->save($file);
@@ -198,5 +200,52 @@ class FileActionService extends DBActionService
             $this->rollbackTransaction();
             throw $e;
         }
+    }
+
+    public function fetchFile(FetchFileForm $fetchFileForm): FileEntity
+    {
+        $this->validateModels([$fetchFileForm]);
+        $FileDirectory = $this->getFileDirectory($fetchFileForm);
+        $this->fileHelper->createDirectoryIfNotExist($FileDirectory);
+        $fileName = basename($fetchFileForm->source);
+        if ($fetchFileForm->isOptimizeFileName()) {
+            $fileName = $this->fileHelper->prepareFilename(
+                $this->fileHelper->defineFileNameWithoutExtension($fileName)
+            ) . '.' . $this->fileHelper->defineFileExtension($fileName);
+        }
+        if ($fetchFileForm->isRenameFile()) {
+            if ($fetchFileForm->isOptimizeFileName()) {
+                $fileName = $this->fileHelper->prepareFilename($fetchFileForm->getNewFileName()) .
+                    '.' .
+                    $this->fileHelper->defineFileExtension($fileName);
+            } else {
+                $fileName = $fetchFileForm->getNewFileName() . '.' . $this->fileHelper->defineFileExtension($fileName);
+            }
+        }
+        $file = $FileDirectory . DIRECTORY_SEPARATOR . $fileName;
+        if (file_exists($file) && false === $fetchFileForm->overwriteExistFile) {
+            $fileName = $this->fileHelper->defineFileNameWithNumber(
+                $fileName,
+                ($this->fileHelper->countFilesInDirectory($FileDirectory) + 1)
+            );
+            $file = $FileDirectory . DIRECTORY_SEPARATOR . $fileName;
+        }
+        try {
+            file_put_contents($file, fopen($fetchFileForm->source, 'r'));
+            return $this->saveFileToDB($file, $fetchFileForm);
+        } catch (\Throwable $e) {
+            $this->fileHelper->deleteFile($file);
+            throw $e;
+        }
+    }
+
+    private function getFileDirectory(SaveFileInterface $saveFileToDB): string
+    {
+        return $this->baseYii::getAlias($saveFileToDB->getSaveLocationAlias()) .
+            $this->uploadFolder .
+            DIRECTORY_SEPARATOR .
+            $saveFileToDB->getEntityName() .
+            DIRECTORY_SEPARATOR .
+            $saveFileToDB->getEntityId();
     }
 }

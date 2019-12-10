@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 
-namespace DmitriiKoziuk\yii2FileManager\data;
+namespace DmitriiKoziuk\yii2FileManager\forms;
 
-use DmitriiKoziuk\yii2Base\forms\Form;
+use yii\base\Model;
+use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\interfaces\SaveFileInterface;
 
-class UploadFileData extends Form implements SaveFileInterface
+class FetchFileForm extends Model implements SaveFileInterface
 {
-    public $saveLocationAlias;
+    public $source;
+    public $saveLocationAlias = FileEntity::FRONTEND_LOCATION_ALIAS;
     public $entityName;
     public $entityId;
-    public $name;
-    public $maxUploadFiles = 20;
+    public $newFileName;
     public $overwriteExistFile = false;
     public $optimizeFileName = true;
 
@@ -20,19 +21,19 @@ class UploadFileData extends Form implements SaveFileInterface
         return [
             [
                 [
+                    'source',
                     'saveLocationAlias',
                     'entityName',
                     'entityId',
-                    'maxUploadFiles',
                     'overwriteExistFile',
                     'optimizeFileName'
                 ],
                 'required'
             ],
+            [['source'], 'string'],
             [['entityName', 'entityId'], 'string', 'max' => 45],
             [['saveLocationAlias'], 'string', 'max' => 25],
-            [['name'], 'string', 'max' => 165],
-            [['maxUploadFiles'], 'integer'],
+            [['newFileName'], 'string', 'max' => 155],
             [['overwriteExistFile', 'optimizeFileName'], 'boolean'],
         ];
     }
@@ -54,17 +55,12 @@ class UploadFileData extends Form implements SaveFileInterface
 
     public function isRenameFile(): bool
     {
-        return ! empty($this->name) && 'null' != $this->name;
+        return ! empty($this->newFileName);
     }
 
     public function getNewFileName(): string
     {
-        return $this->name;
-    }
-
-    public function getMaxUploadFiles(): int
-    {
-        return $this->maxUploadFiles;
+        return $this->newFileName;
     }
 
     public function isOverwriteExistFile(): bool
