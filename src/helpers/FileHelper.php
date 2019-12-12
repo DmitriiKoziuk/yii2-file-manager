@@ -73,7 +73,7 @@ class FileHelper
         $fileName = preg_replace("/[^a-z0-9.\s]/","-", $fileName);
         $fileName = preg_replace('/\s{1,}/', '-', $fileName);
         $fileName = preg_replace('/[-]{2,}/', '-', $fileName);
-        return $fileName;
+        return trim($fileName, '-');
     }
 
     /**
