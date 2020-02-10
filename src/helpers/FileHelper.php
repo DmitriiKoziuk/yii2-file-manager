@@ -175,7 +175,7 @@ class FileHelper
 
     public function getThumbnailName(FileEntity $file): string
     {
-        return $file->id . '.' . $file->extension;
+        return $file->name . '.' . $file->extension;
     }
 
     public function isThumbExist(FileEntity $file, int $width, int $height, int $quality): bool
