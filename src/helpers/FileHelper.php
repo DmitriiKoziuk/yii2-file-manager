@@ -166,9 +166,9 @@ class FileHelper
         return $this->baseYii::getAlias($file->location_alias) .
             $this->thumbnailPath .
             DIRECTORY_SEPARATOR .
-            $width . 'x' . $height . '-' . $quality .
-            DIRECTORY_SEPARATOR .
             $file->entity_name .
+            DIRECTORY_SEPARATOR .
+            $width . 'x' . $height . '-' . $quality .
             DIRECTORY_SEPARATOR .
             $file->entity_id;
     }
