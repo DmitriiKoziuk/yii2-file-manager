@@ -113,9 +113,12 @@ class FileEntity extends ActiveRecord
      */
     public function init()
     {
-        parent::init();
         $this->fileHelper = Yii::$container->get(FileHelper::class);
         $this->queue = Yii::$app->dkFileManagerQueue;
+    }
+
+    public function afterFind()
+    {
     }
 
     public function isImage(): bool
