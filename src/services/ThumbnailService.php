@@ -57,11 +57,11 @@ class ThumbnailService
         $thumbnailDirectory = $this->fileHelper->getThumbnailsDirectoryPath($fileEntity, $width, $height, $quality);
         $this->fileHelper->createDirectoryIfNotExist($thumbnailDirectory);
         if (! $this->fileHelper->isThumbExist($fileEntity, $width, $height, $quality)) {
-            $thumbnailImage = $this->fileHelper->getThumbnailFullPath($fileEntity, $width, $height, $quality);
+            $thumbnailedImageFullPath = $this->fileHelper->getThumbnailFullPath($fileEntity, $width, $height, $quality);
             Image::getImagine()
                 ->open($originalImage)
                 ->thumbnail(new Box($width, $height))
-                ->save($thumbnailImage, ['quality' => $quality]);
+                ->save($thumbnailedImageFullPath, ['quality' => $quality]);
         }
     }
 }

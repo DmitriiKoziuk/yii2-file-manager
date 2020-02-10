@@ -166,16 +166,16 @@ class FileHelper
         return $this->baseYii::getAlias($file->location_alias) .
             $this->thumbnailPath .
             DIRECTORY_SEPARATOR .
-            $width . 'x' . $height . '-' . $quality .
-            DIRECTORY_SEPARATOR .
             $file->entity_name .
+            DIRECTORY_SEPARATOR .
+            $width . 'x' . $height . '-' . $quality .
             DIRECTORY_SEPARATOR .
             $file->entity_id;
     }
 
     public function getThumbnailName(FileEntity $file): string
     {
-        return $file->id . '.' . $file->extension;
+        return $file->name . '.' . $file->extension;
     }
 
     public function isThumbExist(FileEntity $file, int $width, int $height, int $quality): bool
