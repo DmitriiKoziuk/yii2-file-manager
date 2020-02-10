@@ -2,6 +2,8 @@
 
 namespace DmitriiKoziuk\yii2FileManager\widgets;
 
+use Exception;
+use InvalidArgumentException;
 use yii\base\Widget;
 use yii\helpers\Url;
 use kartik\file\FileInput;
@@ -21,16 +23,16 @@ class FileInputWidget extends Widget
     {
         parent::init();
         if (empty($this->entityName)) {
-            throw new \InvalidArgumentException("Property 'entityName' not set.");
+            throw new InvalidArgumentException("Property 'entityName' not set.");
         }
         if (empty($this->entityName)) {
-            throw new \InvalidArgumentException("Property 'entityId' not set.");
+            throw new InvalidArgumentException("Property 'entityId' not set.");
         }
     }
 
     /**
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function run()
     {
