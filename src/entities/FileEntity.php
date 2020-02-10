@@ -117,6 +117,10 @@ class FileEntity extends ActiveRecord
         $this->queue = Yii::$app->dkFileManagerQueue;
     }
 
+    public function afterFind()
+    {
+    }
+
     public function isImage(): bool
     {
         return (bool) preg_match('/^image\/.*$/', $this->mime_type);
