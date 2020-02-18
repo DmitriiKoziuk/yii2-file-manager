@@ -60,7 +60,7 @@ class FileWebHelper
             $list[] = [
                 'caption' => $file->name . '.' . $file->extension,
                 'size'    => $file->size,
-                'url'     => Url::to(['/'. FileManagerModule::ID .'/file/delete', 'id' => $file->id]),
+                'url'     => urldecode(Url::to(['/'. FileManagerModule::ID .'/file/delete', 'id' => $file->id])),
                 'key'     => $file->sort,
             ];
         }
