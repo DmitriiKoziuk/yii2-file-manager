@@ -5,53 +5,34 @@ namespace DmitriiKoziuk\yii2FileManager\controllers\backend;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\web\NotFoundHttpException;
-use yii\web\BadRequestHttpException;
+use yii\web\ServerErrorHttpException;
+use yii\web\UploadedFile;
 use yii\base\Module;
 use yii\filters\VerbFilter;
-use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use yii\helpers\FileHelper;
+use yii\helpers\Url;
+use DmitriiKoziuk\yii2FileManager\forms\FileUploadForm;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
-use DmitriiKoziuk\yii2FileManager\forms\UploadFileForm;
-use DmitriiKoziuk\yii2FileManager\forms\UpdateFileSortForm;
-use DmitriiKoziuk\yii2FileManager\data\UploadFileData;
 use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
-use DmitriiKoziuk\yii2FileManager\services\FileActionService;
+use DmitriiKoziuk\yii2FileManager\services\FileService;
 use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
-use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
-use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
+use DmitriiKoziuk\yii2FileManager\exceptions\forms\FileUploadFormNotValidException;
 
 /**
  * FileController implements the CRUD actions for File model.
  */
 final class FileController extends Controller
 {
-    /**
-     * @var FileActionService
-     */
-    private $_fileService;
-
-    /**
-     * @var FileRepository
-     */
-    private $fileRepository;
-
-    /**
-     * @var FileWebHelper
-     */
-    private $_fileWebHelper;
+    private FileService $fileService;
 
     public function __construct(
         string $id,
         Module $module,
-        FileActionService $fileService,
-        FileRepository $fileRepository,
-        FileWebHelper $fileWebHelper,
+        FileService $fileService,
         array $config = []
     ) {
         parent::__construct($id, $module, $config);
-        $this->_fileService = $fileService;
-        $this->fileRepository = $fileRepository;
-        $this->_fileWebHelper = $fileWebHelper;
+        $this->fileService = $fileService;
     }
 
     /**
@@ -82,7 +63,6 @@ final class FileController extends Controller
         return $this->render('index', [
             'searchModel' => $searchForm,
             'dataProvider' => $dataProvider,
-            'fileWebHelper' => $this->_fileWebHelper,
         ]);
     }
 
@@ -90,27 +70,67 @@ final class FileController extends Controller
      * Displays a single File model.
      * @param integer $id
      * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => '',
         ]);
     }
 
     /**
      * @return string
      */
-    public function actionCreate()
+    public function actionUpload()
     {
-        $files = $this->fileRepository->getEntityAllFiles(
-            FileManagerModule::getId(),
-            '1'
-        );
-        return $this->render('create', [
-            'fileWebHelper' => $this->_fileWebHelper,
-            'files' => $files,
+        if (Yii::$app->request->isPost) {
+            try {
+                $fileUploadForm = new FileUploadForm();
+                if (
+                    ! $fileUploadForm->load(Yii::$app->request->post()) ||
+                    ! $fileUploadForm->validate()
+                ) {
+                    throw new FileUploadFormNotValidException();
+                }
+                $savedFilesOnDisk = $this->saveUploadedFilesOnDisk(
+                    FileUploadForm::getName(),
+                    $fileUploadForm->locationAlias,
+                    $fileUploadForm->moduleName,
+                    $fileUploadForm->entityName,
+                    $fileUploadForm->specificEntityId
+                );
+                $savedFilesToDb = [];
+                foreach ($savedFilesOnDisk as $file) {
+                    $savedFilesToDb[] = $this->fileService->saveFileToDB(
+                        $file['file'],
+                        $file['realName'],
+                        $fileUploadForm
+                    );
+                }
+                $response['files'] = [];
+                foreach ($savedFilesToDb as $file) {
+                    $response['files'][] = [
+                        'name'         => $file->name,
+                        'size'         => $file->size,
+                        'url'          => $file->getUrl(),
+                        'thumbnailUrl' => $file->getUrl(),
+                        'deleteUrl'    => Url::to(['delete', 'id' => $file->id]),
+                        'downloadUrl'  => Url::to(['download', 'id' => $file->id]),
+                        'deleteType'   => 'POST',
+                    ];
+                }
+                return true;
+            } catch (\Throwable $e) {
+                Yii::error($e);
+                if (isset($savedFilesOnDisk) && ! empty($savedFilesOnDisk)) {
+                    foreach ($savedFilesOnDisk as $savedFile) {
+                        unlink($savedFile['file']);
+                    }
+                }
+                throw new ServerErrorHttpException();
+            }
+        }
+        return $this->render('upload', [
         ]);
     }
 
@@ -122,67 +142,52 @@ final class FileController extends Controller
     /**
      * @param $id
      * @return Response
-     * @throws \Throwable
-     * @throws \yii\db\Exception
      */
     public function actionDelete($id)
     {
-        $this->_fileService->deleteFile($id);
         return $this->redirect(['index']);
-    }
-
-    /**
-     * @return bool
-     * @throws BadRequestHttpException
-     * @throws \Throwable
-     * @throws \yii\db\Exception
-     */
-    public function actionUpload()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $uploadFileData = new UploadFileData();
-        if ($uploadFileData->load(Yii::$app->request->post()) && $uploadFileData->validate()) {
-            $this->_fileService->saveUploadedFiles(new UploadFileForm(), $uploadFileData);
-        } else {
-            throw new BadRequestHttpException('Bad request.');
-        }
-
-        return true;
     }
 
     public function actionSort()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if (Yii::$app->request->isPost) {
-            $data = Yii::$app->request->post();
-            $updateFileSortForm = new UpdateFileSortForm();
-            $updateFileSortForm->fileId = (int) $data['id'];
-            $updateFileSortForm->newSort = ++$data['sort'];
-            if ($updateFileSortForm->validate()) {
-                $this->_fileService->changeFileSort($updateFileSortForm);
-            }
-        }
-
         return [
             'status' => 'success',
         ];
     }
 
-    /**
-     * Finds the File model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param integer $id
-     * @return FileEntity the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    protected function findModel($id)
-    {
-        if (($model = FileEntity::findOne($id)) !== null) {
-            return $model;
-        }
+    private function saveUploadedFilesOnDisk(
+        string $filesArrayName,
+        string $location,
+        string $moduleName,
+        string $entityName,
+        int $specificEntityID
+    ) {
+        try {
+            $savedFiles = [];
+            $filePath = FileEntity::getUploadFileFolderFullPath($location, $moduleName, $entityName, $specificEntityID);
+            if(!is_dir($filePath)) {
+                FileHelper::createDirectory($filePath);
+            }
 
-        throw new NotFoundHttpException(Yii::t('dkFileManager', 'The requested page does not exist.'));
+            $uploadedFiles = UploadedFile::getInstancesByName($filesArrayName);
+            foreach ($uploadedFiles as $uploadedFile) {
+                $file = $filePath . '/' . FileEntity::prepareFilename($uploadedFile->baseName) . '.' . $uploadedFile->extension;
+                $uploadedFile->saveAs($file);
+                $savedFiles[] = [
+                    'file' => $file,
+                    'realName' => "{$uploadedFile->baseName}.{$uploadedFile->extension}",
+                ];
+            }
+            return $savedFiles;
+        } catch (\Throwable $e) {
+            if (isset($savedFiles) && ! empty($savedFiles)) {
+                foreach ($savedFiles as $savedFile) {
+                    unlink($savedFile['file']);
+                }
+            }
+            throw $e;
+        }
     }
 }

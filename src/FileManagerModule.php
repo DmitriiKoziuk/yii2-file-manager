@@ -3,10 +3,8 @@
 namespace DmitriiKoziuk\yii2FileManager;
 
 use InvalidArgumentException;
-use yii\BaseYii;
 use yii\di\Container;
 use yii\di\NotInstantiableException;
-use yii\web\UploadedFile;
 use yii\web\Application as WebApp;
 use yii\base\Application as BaseApp;
 use yii\base\Module;
@@ -16,11 +14,6 @@ use yii\queue\cli\Queue;
 use DmitriiKoziuk\yii2ModuleManager\interfaces\ModuleInterface;
 use DmitriiKoziuk\yii2ModuleManager\ModuleManager;
 use DmitriiKoziuk\yii2ConfigManager\ConfigManagerModule;
-use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
-use DmitriiKoziuk\yii2FileManager\services\FileActionService;
-use DmitriiKoziuk\yii2FileManager\services\ThumbnailService;
-use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
-use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 
 final class FileManagerModule extends Module implements ModuleInterface
 {
@@ -69,9 +62,9 @@ final class FileManagerModule extends Module implements ModuleInterface
     {
         /** @var BaseApp $app */
         $app = $this->module;
-        $this->_initLocalProperties($app);
-        $this->_registerTranslation($app);
-        $this->_registerClassesToDIContainer($app);
+        $this->initLocalProperties($app);
+        $this->registerTranslation($app);
+        $this->registerClassesToDIContainer($app);
     }
 
     public static function getId(): string
@@ -96,7 +89,7 @@ final class FileManagerModule extends Module implements ModuleInterface
      * @param BaseApp $app
      * @throws InvalidArgumentException
      */
-    private function _initLocalProperties(BaseApp $app)
+    private function initLocalProperties(BaseApp $app)
     {
         if ($app instanceof WebApp && $app->id == $this->backendAppId) {
             $app->request->parsers['application/json'] = 'yii\web\JsonParser';
@@ -123,7 +116,7 @@ final class FileManagerModule extends Module implements ModuleInterface
         }
     }
 
-    private function _registerTranslation(BaseApp $app)
+    private function registerTranslation(BaseApp $app)
     {
         $app->i18n->translations[self::TRANSLATE] = [
             'class'          => 'yii\i18n\PhpMessageSource',
@@ -137,44 +130,8 @@ final class FileManagerModule extends Module implements ModuleInterface
      * @throws InvalidConfigException
      * @throws NotInstantiableException
      */
-    private function _registerClassesToDIContainer(BaseApp $app): void
+    private function registerClassesToDIContainer(BaseApp $app): void
     {
-        $this->diContainer->setSingleton(FileHelper::class, function () {
-            return new FileHelper(new BaseYii(), $this->uploadFilePath, $this->imageThumbPath);
-        });
-        $this->diContainer->setSingleton(FileRepository::class, function () {
-            return new FileRepository();
-        });
-        /** @var FileHelper $fileHelper */
-        $fileHelper = $this->diContainer->get(FileHelper::class);
-        /** @var FileRepository $fileRepository */
-        $fileRepository = $this->diContainer->get(FileRepository::class);
-        $this->diContainer->setSingleton(
-            FileActionService::class,
-            function () use ($fileRepository, $app, $fileHelper) {
-                return new FileActionService(
-                    new BaseYii(),
-                    $this->uploadFilePath,
-                    $fileHelper,
-                    new UploadedFile(),
-                    $fileRepository,
-                    $app->db
-                );
-            }
-        );
-        /** @var FileActionService $fileActionService */
-        $fileActionService = $this->diContainer->get(FileActionService::class);
-        $this->diContainer->setSingleton(
-            ThumbnailService::class,
-            function () use ($fileRepository, $fileHelper, $fileActionService) {
-                return new ThumbnailService($fileActionService, $fileRepository, $fileHelper);
-            }
-        );
-        $this->diContainer->setSingleton(FileWebHelper::class, function () {
-           return new FileWebHelper(
-               $this->frontendDomainName,
-               $this->uploadFilePath
-           );
-        });
+
     }
 }

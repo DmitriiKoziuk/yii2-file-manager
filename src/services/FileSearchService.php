@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace DmitriiKoziuk\yii2FileManager\services;
 
 use yii\data\ActiveDataProvider;
@@ -36,14 +37,6 @@ class FileSearchService
             'created_at' => $params->created_at,
             'updated_at' => $params->updated_at,
         ]);
-
-        $query->andFilterWhere(['like', 'entity_name', $params->entity_name])
-            ->andFilterWhere(['like', 'entity_id', $params->entity_id])
-            ->andFilterWhere(['like', 'location_alias', $params->location_alias])
-            ->andFilterWhere(['like', 'mime_type', $params->mime_type])
-            ->andFilterWhere(['like', 'name', $params->name])
-            ->andFilterWhere(['like', 'extension', $params->extension])
-            ->andFilterWhere(['like', 'title', $params->title]);
 
         return $dataProvider;
     }

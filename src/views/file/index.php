@@ -4,13 +4,11 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
-use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
 
 /**
  * @var $this          yii\web\View
  * @var $searchModel   DmitriiKoziuk\yii2FileManager\services\FileSearchService
  * @var $dataProvider  yii\data\ActiveDataProvider
- * @var $fileWebHelper FileWebHelper
  */
 
 $this->title = Yii::t(FileManagerModule::ID, 'Files');
@@ -22,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p>
-        <?= Html::a(Yii::t(FileManagerModule::ID, 'Upload files'), ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a(Yii::t(FileManagerModule::ID, 'Upload files'), ['upload'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?= GridView::widget([
@@ -32,29 +30,42 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'entity_name',
-            'entity_id',
+            [
+                'attribute' => 'module_name',
+                'content' => function (FileEntity $model) {
+                    return $model->entityGroup->module_name;
+                },
+            ],
+            [
+                'attribute' => 'entity_name',
+                'content' => function (FileEntity $model) {
+                    return $model->entityGroup->entity_name;
+                },
+            ],
+            'specific_entity_id',
             'location_alias',
-            'mime_type',
+            [
+                'attribute' => 'mime_type',
+                'content' => function (FileEntity $model) {
+                    return "{$model->mimeType->type} / {$model->mimeType->subtype}";
+                },
+            ],
             'name',
-            'extension',
+            'real_name',
             [
                 'attribute' => 'preview',
-                'content' => function ($model) use ($fileWebHelper) {
-                    /** @var FileEntity $model */
+                'content' => function (FileEntity $model) {
                     if ($model->isImage()) {
                         return Html::tag('img', '', [
-                            'src' => $fileWebHelper->getFileFullWebPath($model),
+                            'src' => $model->getUrl(),
                             'style' => 'max-width: 150px; max-height: 150px;',
                         ]);
 
-                    } else {
-                        return '';
                     }
+                    return '';
                 }
             ],
             'size',
-            'title',
             'sort',
             'created_at:datetime',
             'updated_at:datetime',

@@ -3,10 +3,9 @@
 namespace DmitriiKoziuk\yii2FileManager\entities;
 
 use Yii;
+use yii\db\ActiveQuery;
 use yii\queue\cli\Queue;
-use yii\db\ActiveRecord;
-use yii\di\NotInstantiableException;
-use yii\base\InvalidConfigException;
+use yii\helpers\Inflector;
 use yii\behaviors\TimestampBehavior;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
@@ -15,23 +14,23 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
 /**
  * This is the model class for table "{{%dk_fm_files}}".
  *
- * @property int    $id
- * @property string $entity_name
- * @property string $entity_id
- * @property string $location_alias @frontend @backend etc.
- * @property string $mime_type
- * @property string $name File name without extension.
- * @property string $extension
- * @property int    $size In bytes.
- * @property int    $sort
- * @property int    $width
- * @property int    $height
- * @property string $alt
- * @property string $title
- * @property int    $created_at
- * @property int    $updated_at
+ * @property int $id
+ * @property int $entity_group_id
+ * @property int $mime_type_id
+ * @property int $specific_entity_id
+ * @property string $location_alias
+ * @property string $name
+ * @property string $real_name
+ * @property int $size
+ * @property int $sort
+ * @property int $created_at
+ * @property int $updated_at
+ *
+ * @property GroupEntity $entityGroup
+ * @property MimeTypeEntity $mimeType
+ * @property ImageEntity $image
  */
-class FileEntity extends ActiveRecord
+class FileEntity extends \yii\db\ActiveRecord
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
@@ -67,18 +66,35 @@ class FileEntity extends ActiveRecord
     public function rules()
     {
         return [
-            [['entity_name', 'entity_id', 'location_alias', 'mime_type'], 'required'],
-            [['size', 'sort', 'width', 'height', 'created_at', 'updated_at'], 'integer'],
-            [['entity_name', 'entity_id'], 'string', 'max' => 45],
-            [['location_alias', 'mime_type'], 'string', 'max' => 25],
-            [['name'], 'string', 'max' => 155],
-            [['alt', 'title'], 'string', 'max' => 255],
-            [['extension'], 'string', 'max' => 10],
-            [['width', 'height', 'alt', 'title'], 'default', 'value' => null],
             [
-                ['entity_name', 'entity_id', 'sort'],
+                [
+                    'entity_group_id', 'mime_type_id', 'specific_entity_id', 'location_alias',
+                    'name', 'real_name', 'size', 'sort'
+                ],
+                'required'
+            ],
+            [['entity_group_id', 'mime_type_id', 'specific_entity_id', 'size', 'sort', 'created_at', 'updated_at'], 'integer'],
+            [['location_alias'], 'string', 'max' => 25],
+            [['name'], 'string', 'max' => 155],
+            [['real_name'], 'string', 'max' => 255],
+            [
+                ['entity_group_id', 'specific_entity_id', 'sort'],
                 'unique',
-                'targetAttribute' => ['entity_name', 'entity_id', 'sort']
+                'targetAttribute' => ['entity_group_id', 'specific_entity_id', 'sort']
+            ],
+            [
+                ['entity_group_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => GroupEntity::class,
+                'targetAttribute' => ['entity_group_id' => 'id']
+            ],
+            [
+                ['mime_type_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => MimeTypeEntity::class,
+                'targetAttribute' => ['mime_type_id' => 'id']
             ],
         ];
     }
@@ -89,41 +105,53 @@ class FileEntity extends ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id'             => Yii::t(FileManagerModule::ID, 'ID'),
-            'entity_name'    => Yii::t(FileManagerModule::ID, 'Entity Name'),
-            'entity_id'      => Yii::t(FileManagerModule::ID, 'Entity ID'),
-            'location_alias' => Yii::t(FileManagerModule::ID, 'Location alias'),
-            'mime_type'      => Yii::t(FileManagerModule::ID, 'Mime type'),
-            'name'           => Yii::t(FileManagerModule::ID, 'Name'),
-            'extension'      => Yii::t(FileManagerModule::ID, 'Extension'),
-            'size'           => Yii::t(FileManagerModule::ID, 'Size'),
-            'sort'           => Yii::t(FileManagerModule::ID, 'Sort'),
-            'width'          => Yii::t(FileManagerModule::ID, 'Width'),
-            'height'         => Yii::t(FileManagerModule::ID, 'Height'),
-            'alt'            => Yii::t(FileManagerModule::ID, 'Alt'),
-            'title'          => Yii::t(FileManagerModule::ID, 'Title'),
-            'created_at'     => Yii::t(FileManagerModule::ID, 'Created at'),
-            'updated_at'     => Yii::t(FileManagerModule::ID, 'Updated at'),
+            'id' => Yii::t(FileManagerModule::TRANSLATE, 'ID'),
+            'entity_group_id' => Yii::t(FileManagerModule::TRANSLATE, 'Entity Group ID'),
+            'mime_type_id' => Yii::t(FileManagerModule::TRANSLATE, 'Mime Type ID'),
+            'specific_entity_id' => Yii::t(FileManagerModule::TRANSLATE, 'Specific Entity ID'),
+            'location_alias' => Yii::t(FileManagerModule::TRANSLATE, 'Location Alias'),
+            'name' => Yii::t(FileManagerModule::TRANSLATE, 'Name'),
+            'real_name' => Yii::t(FileManagerModule::TRANSLATE, 'Real Name'),
+            'size' => Yii::t(FileManagerModule::TRANSLATE, 'Size'),
+            'sort' => Yii::t(FileManagerModule::TRANSLATE, 'Sort'),
+            'created_at' => Yii::t(FileManagerModule::TRANSLATE, 'Created At'),
+            'updated_at' => Yii::t(FileManagerModule::TRANSLATE, 'Updated At'),
         ];
     }
 
     /**
-     * @throws InvalidConfigException
-     * @throws NotInstantiableException
+     * Gets query for [[EntityGroup]].
+     *
+     * @return ActiveQuery
      */
-    public function init()
+    public function getEntityGroup()
     {
-        $this->fileHelper = Yii::$container->get(FileHelper::class);
-        $this->queue = Yii::$app->dkFileManagerQueue;
+        return $this->hasOne(GroupEntity::class, ['id' => 'entity_group_id']);
     }
 
-    public function afterFind()
+    /**
+     * Gets query for [[MimeType]].
+     *
+     * @return ActiveQuery
+     */
+    public function getMimeType()
     {
+        return $this->hasOne(MimeTypeEntity::class, ['id' => 'mime_type_id']);
     }
 
-    public function isImage(): bool
+    /**
+     * Gets query for [[DkFmImages]].
+     *
+     * @return ActiveQuery
+     */
+    public function getImage()
     {
-        return (bool) preg_match('/^image\/.*$/', $this->mime_type);
+        return $this->hasOne(ImageEntity::class, ['file_id' => 'id']);
+    }
+
+    public function isImage()
+    {
+        return $this->mimeType->type == 'image';
     }
 
     public function getThumbnail(int $width, int $height, int $quality = 65): string
@@ -138,5 +166,40 @@ class FileEntity extends ActiveRecord
             'quality' => $quality,
         ]));
         return $this->fileHelper->getFileRecordWebPath($this);
+    }
+
+    public function getUrl()
+    {
+        $webFolder = $this::getUploadFileWebFolder(
+            $this->entityGroup->module_name,
+            $this->entityGroup->entity_name,
+            $this->specific_entity_id
+        );
+        return $webFolder . '/' . $this->name;
+    }
+
+    public static function getUploadFileWebFolder(string $moduleName, string $entityName, int $specificEntityID)
+    {
+        return "/uploads/{$moduleName}/{$entityName}/{$specificEntityID}";
+    }
+
+    public static function getUploadFileFolderFullPath(
+        string $location,
+        string $moduleName,
+        string $entityName,
+        int $specificEntityID
+    ) {
+        return Yii::getAlias($location) . self::getUploadFileWebFolder($moduleName, $entityName, $specificEntityID);
+    }
+
+    public static function prepareFilename(string $fileName): string
+    {
+        $fileName = trim($fileName);
+        $fileName = Inflector::transliterate($fileName);
+        $fileName = mb_strtolower($fileName);
+        $fileName = preg_replace("/[^a-z0-9.\s]/","-", $fileName);
+        $fileName = preg_replace('/\s{1,}/', '-', $fileName);
+        $fileName = preg_replace('/[-]{2,}/', '-', $fileName);
+        return trim($fileName, '-');
     }
 }

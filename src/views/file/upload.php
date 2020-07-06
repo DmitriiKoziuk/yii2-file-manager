@@ -3,15 +3,8 @@
 use yii\helpers\Html;
 use DmitriiKoziuk\yii2FileManager\assets\MainBackendFileUploadAsset;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use DmitriiKoziuk\yii2FileManager\forms\FileUploadForm;
 use DmitriiKoziuk\yii2FileManager\widgets\FileInputWidget;
-use DmitriiKoziuk\yii2FileManager\helpers\FileWebHelper;
-use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
-
-/**
- * @var $this yii\web\View
- * @var FileWebHelper $fileWebHelper
- * @var FileEntity[] $files
- */
 
 $this->title = Yii::t(FileManagerModule::ID, 'Upload files');
 $this->params['breadcrumbs'][] = ['label' => Yii::t(FileManagerModule::ID, 'Files'), 'url' => ['index']];
@@ -39,12 +32,12 @@ MainBackendFileUploadAsset::register($this);
   <div class="row">
     <div class="col-md-12">
         <?= FileInputWidget::widget([
-            'entityName' => FileManagerModule::getId(),
+            'fileUploadArrayName' => FileUploadForm::getName(),
+            'moduleName' => FileManagerModule::getId(),
+            'entityName' => 'all-files',
             'entityId' => '1',
-            'initialPreview' => $fileWebHelper
-                ->getFileInputInitialPreview($files),
-            'initialPreviewConfig' => $fileWebHelper
-                ->getFileInputInitialPreviewConfig($files),
+            'initialPreview' => [],
+            'initialPreviewConfig' => [],
         ]) ?>
     </div>
   </div>

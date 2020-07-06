@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DmitriiKoziuk\yii2FileManager\widgets;
 
@@ -12,13 +12,14 @@ use DmitriiKoziuk\yii2FileManager\assets\FileSortAsset;
 
 class FileInputWidget extends Widget
 {
-    public $entityName;
-    public $entityId;
-    public $fileName;
-    public $saveLocationAlias = '@frontend';
-    public $maxFileCount = 20;
-    public $initialPreview = [];
-    public $initialPreviewConfig = [];
+    public string $fileUploadArrayName;
+    public string $moduleName;
+    public string $entityName;
+    public string $entityId;
+    public string $saveLocationAlias = '@frontend';
+    public int    $maxFileCount = 20;
+    public array  $initialPreview = [];
+    public array  $initialPreviewConfig = [];
 
     public function init()
     {
@@ -39,7 +40,7 @@ class FileInputWidget extends Widget
     {
         $this->view->registerAssetBundle(FileSortAsset::class);
         return FileInput::widget([
-            'name' => "UploadFileForm[upload][]",
+            'name' => "{$this->fileUploadArrayName}[]",
             'options'=>[
                 'multiple'=> true,
                 'class' => 'upload-file-form',
@@ -52,10 +53,10 @@ class FileInputWidget extends Widget
                 'initialPreviewConfig' => $this->initialPreviewConfig,
                 'uploadUrl' => urldecode(Url::to(['/' . FileManagerModule::getId() . '/file/upload'])),
                 'uploadExtraData' => [
-                    'UploadFileData[saveLocationAlias]' => $this->saveLocationAlias,
-                    'UploadFileData[entityName]' => $this->entityName,
-                    'UploadFileData[entityId]' => $this->entityId,
-                    'UploadFileData[name]' => $this->fileName,
+                    'FileUploadForm[locationAlias]' => $this->saveLocationAlias,
+                    'FileUploadForm[moduleName]' => $this->moduleName,
+                    'FileUploadForm[entityName]' => $this->entityName,
+                    'FileUploadForm[specificEntityId]' => $this->entityId,
                 ],
                 'overwriteInitial'=> false,
                 'maxFileCount' => $this->maxFileCount,
