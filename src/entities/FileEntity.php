@@ -189,7 +189,7 @@ class FileEntity extends \yii\db\ActiveRecord
         string $entityName,
         int $specificEntityID
     ) {
-        return Yii::getAlias($location) . self::getUploadFileWebFolder($moduleName, $entityName, $specificEntityID);
+        return Yii::getAlias($location) . '/web' . self::getUploadFileWebFolder($moduleName, $entityName, $specificEntityID);
     }
 
     public static function prepareFilename(string $fileName): string
