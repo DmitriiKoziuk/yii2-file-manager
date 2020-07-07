@@ -2,6 +2,7 @@
 
 namespace DmitriiKoziuk\yii2FileManager\services;
 
+use Yii;
 use yii\imagine\Image;
 use DmitriiKoziuk\yii2FileManager\forms\FileUploadForm;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
@@ -13,6 +14,7 @@ use DmitriiKoziuk\yii2FileManager\repositories\FileRepository;
 use DmitriiKoziuk\yii2FileManager\repositories\MimeTypeRepository;
 use DmitriiKoziuk\yii2FileManager\repositories\ImageRepository;
 use DmitriiKoziuk\yii2FileManager\exceptions\forms\FileUploadFormNotValidException;
+use DmitriiKoziuk\yii2FileManager\exceptions\services\file\TryDeleteNotExistFileException;
 
 class FileService
 {
@@ -41,7 +43,7 @@ class FileService
         if (! $fileUploadForm->validate()) {
             throw new FileUploadFormNotValidException();
         }
-        $transaction = \Yii::$app->db->beginTransaction();
+        $transaction = Yii::$app->db->beginTransaction();
         try {
             $GroupEntity = $this->addEntityGroupIfNotExist($fileUploadForm);
             [$mimeType, $mimeSubtype] = explode('/', mime_content_type($file));
@@ -61,6 +63,23 @@ class FileService
             }
             $transaction->commit();
             return $fileEntity;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
+
+    public function deleteFile(int $fileId): void
+    {
+        $fileEntity = $this->fileRepository->getFileById($fileId);
+        if (empty($fileEntity)) {
+            throw new TryDeleteNotExistFileException();
+        }
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->deleteFileFromDB($fileEntity);
+            $this->deleteFileFromDisk($fileEntity);
+            $transaction->commit();
         } catch (\Exception $e) {
             $transaction->rollBack();
             throw $e;
@@ -149,5 +168,21 @@ class FileService
             ->open($fullPathToImage);
         $size = $image->getSize();
         return [$size->getWidth(), $size->getHeight()];
+    }
+
+    private function deleteFileFromDB(FileEntity $fileEntity): void
+    {
+        if ($fileEntity->isImage()) {
+            $this->imageRepository->delete($fileEntity->image);
+        }
+        $this->fileRepository->delete($fileEntity);
+    }
+
+    private function deleteFileFromDisk(FileEntity $fileEntity): void
+    {
+        $file = $fileEntity->getFileFullPath();
+        if (is_file($file)) {
+            unlink($fileEntity->getFileFullPath());
+        }
     }
 }

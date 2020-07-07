@@ -51,9 +51,7 @@ class GroupEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[DkFmFiles]].
-     *
-     * @return ActiveQuery
+     * @return ActiveQuery|FileEntity[]
      */
     public function getFiles()
     {

@@ -14,6 +14,7 @@ use yii\helpers\Url;
 use DmitriiKoziuk\yii2FileManager\forms\FileUploadForm;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
 use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
+use DmitriiKoziuk\yii2FileManager\services\SettingsService;
 use DmitriiKoziuk\yii2FileManager\services\FileService;
 use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
 use DmitriiKoziuk\yii2FileManager\exceptions\forms\FileUploadFormNotValidException;
@@ -25,13 +26,17 @@ final class FileController extends Controller
 {
     private FileService $fileService;
 
+    private SettingsService $settings;
+
     public function __construct(
         string $id,
         Module $module,
+        SettingsService $settingsService,
         FileService $fileService,
         array $config = []
     ) {
         parent::__construct($id, $module, $config);
+        $this->settings = $settingsService;
         $this->fileService = $fileService;
     }
 
@@ -63,6 +68,7 @@ final class FileController extends Controller
         return $this->render('index', [
             'searchModel' => $searchForm,
             'dataProvider' => $dataProvider,
+            'settings' => $this->settings,
         ]);
     }
 
@@ -78,9 +84,6 @@ final class FileController extends Controller
         ]);
     }
 
-    /**
-     * @return string
-     */
     public function actionUpload()
     {
         if (Yii::$app->request->isPost) {
@@ -139,12 +142,13 @@ final class FileController extends Controller
         //TODO: file update.
     }
 
-    /**
-     * @param $id
-     * @return Response
-     */
-    public function actionDelete($id)
+    public function actionDelete(int $id)
     {
+        try {
+            $this->fileService->deleteFile($id);
+        } catch (\Exception $e) {
+            throw $e;
+        }
         return $this->redirect(['index']);
     }
 
@@ -173,7 +177,18 @@ final class FileController extends Controller
 
             $uploadedFiles = UploadedFile::getInstancesByName($filesArrayName);
             foreach ($uploadedFiles as $uploadedFile) {
-                $file = $filePath . '/' . FileEntity::prepareFilename($uploadedFile->baseName) . '.' . $uploadedFile->extension;
+                $file = $filePath .
+                    DIRECTORY_SEPARATOR .
+                    FileEntity::prepareFilename($uploadedFile->baseName) . '.' . $uploadedFile->extension;
+                if (file_exists($file)) {
+                    $file = $filePath .
+                        DIRECTORY_SEPARATOR .
+                        FileEntity::prepareFilename($uploadedFile->baseName) .
+                        '_' .
+                        uniqid() .
+                        '.' .
+                        $uploadedFile->extension;
+                }
                 $uploadedFile->saveAs($file);
                 $savedFiles[] = [
                     'file' => $file,

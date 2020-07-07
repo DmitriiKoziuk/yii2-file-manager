@@ -4,16 +4,15 @@ namespace DmitriiKoziuk\yii2FileManager;
 
 use InvalidArgumentException;
 use yii\di\Container;
-use yii\di\NotInstantiableException;
 use yii\web\Application as WebApp;
 use yii\base\Application as BaseApp;
-use yii\base\Module;
-use yii\base\InvalidConfigException;
 use yii\console\Application as ConsoleApp;
+use yii\base\Module;
 use yii\queue\cli\Queue;
 use DmitriiKoziuk\yii2ModuleManager\interfaces\ModuleInterface;
 use DmitriiKoziuk\yii2ModuleManager\ModuleManager;
 use DmitriiKoziuk\yii2ConfigManager\ConfigManagerModule;
+use DmitriiKoziuk\yii2FileManager\services\SettingsService;
 
 final class FileManagerModule extends Module implements ModuleInterface
 {
@@ -21,50 +20,32 @@ final class FileManagerModule extends Module implements ModuleInterface
 
     const TRANSLATE = self::ID;
 
-    /**
-     * @var Container
-     */
-    public $diContainer;
+    public Container $diContainer;
 
-    /**
-     * @var Queue
-     */
-    public $queue;
+    public Queue $queue;
 
     /**
      * Overwrite this param if you backend app id is different from default.
-     * @var string
      */
-    public $backendAppId;
+    public string $backendAppId;
 
     /**
      * Domain name with protocol and without end slash.
      * Need for display image preview that load in @frontend location.
-     * @var string
      */
-    public $frontendDomainName;
+    public string $frontendDomainName;
 
-    /**
-     * @var string
-     */
-    public $uploadFilePath;
+    public string $uploadFilePath;
 
-    /**
-     * @var string
-     */
-    public $imageThumbPath;
+    public string $imageThumbPath;
 
-    /**
-     * @throws InvalidConfigException
-     * @throws NotInstantiableException
-     */
     public function init()
     {
         /** @var BaseApp $app */
         $app = $this->module;
         $this->initLocalProperties($app);
         $this->registerTranslation($app);
-        $this->registerClassesToDIContainer($app);
+        $this->registerClassesToDIContainer();
     }
 
     public static function getId(): string
@@ -125,13 +106,12 @@ final class FileManagerModule extends Module implements ModuleInterface
         ];
     }
 
-    /**
-     * @param BaseApp $app
-     * @throws InvalidConfigException
-     * @throws NotInstantiableException
-     */
-    private function registerClassesToDIContainer(BaseApp $app): void
+    private function registerClassesToDIContainer(): void
     {
-
+        $this->diContainer->set(SettingsService::class, function () {
+           return new SettingsService([
+               'frontendDomain' => $this->frontendDomainName,
+           ]);
+        });
     }
 }

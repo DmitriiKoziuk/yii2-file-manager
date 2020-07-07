@@ -1,14 +1,19 @@
 <?php
 
+use yii\web\View;
 use yii\helpers\Html;
 use yii\grid\GridView;
+use yii\data\ActiveDataProvider;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
+use DmitriiKoziuk\yii2FileManager\services\SettingsService;
+use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
 
 /**
- * @var $this          yii\web\View
- * @var $searchModel   DmitriiKoziuk\yii2FileManager\services\FileSearchService
- * @var $dataProvider  yii\data\ActiveDataProvider
+ * @var $this         View
+ * @var $searchModel  FileSearchService
+ * @var $dataProvider ActiveDataProvider
+ * @var $settings     SettingsService
  */
 
 $this->title = Yii::t(FileManagerModule::ID, 'Files');
@@ -54,10 +59,13 @@ $this->params['breadcrumbs'][] = $this->title;
             'real_name',
             [
                 'attribute' => 'preview',
-                'content' => function (FileEntity $model) {
+                'content' => function (FileEntity $model) use ($settings) {
                     if ($model->isImage()) {
+                        $url = FileEntity::FRONTEND_LOCATION_ALIAS == $model->location_alias ?
+                            $settings->getFrontendDomain() . $model->getUrl() :
+                            $model->getUrl();
                         return Html::tag('img', '', [
-                            'src' => $model->getUrl(),
+                            'src' => $url,
                             'style' => 'max-width: 150px; max-height: 150px;',
                         ]);
 

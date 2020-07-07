@@ -35,15 +35,9 @@ class FileEntity extends \yii\db\ActiveRecord
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
 
-    /**
-     * @var FileHelper
-     */
-    private $fileHelper;
+    private FileHelper $fileHelper;
 
-    /**
-     * @var Queue
-     */
-    private $queue;
+    private Queue $queue;
 
     /**
      * {@inheritdoc}
@@ -120,9 +114,7 @@ class FileEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[EntityGroup]].
-     *
-     * @return ActiveQuery
+     * @return ActiveQuery|GroupEntity
      */
     public function getEntityGroup()
     {
@@ -130,9 +122,7 @@ class FileEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[MimeType]].
-     *
-     * @return ActiveQuery
+     * @return ActiveQuery|MimeTypeEntity
      */
     public function getMimeType()
     {
@@ -140,9 +130,7 @@ class FileEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[DkFmImages]].
-     *
-     * @return ActiveQuery
+     * @return ActiveQuery|ImageEntity
      */
     public function getImage()
     {
@@ -165,7 +153,7 @@ class FileEntity extends \yii\db\ActiveRecord
             'height' => $height,
             'quality' => $quality,
         ]));
-        return $this->fileHelper->getFileRecordWebPath($this);
+        return $this->getUrl();
     }
 
     public function getUrl()
@@ -176,6 +164,16 @@ class FileEntity extends \yii\db\ActiveRecord
             $this->specific_entity_id
         );
         return $webFolder . '/' . $this->name;
+    }
+
+    public function getFileFullPath()
+    {
+        return self::getUploadFileFolderFullPath(
+                $this->location_alias,
+                $this->entityGroup->module_name,
+                $this->entityGroup->entity_name,
+                $this->specific_entity_id
+            ) . '/' . $this->name;
     }
 
     public static function getUploadFileWebFolder(string $moduleName, string $entityName, int $specificEntityID)
