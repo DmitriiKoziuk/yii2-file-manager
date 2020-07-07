@@ -58,7 +58,7 @@ class FileService
                 $fileRealName,
                 $size
             );
-            if ('image' === $mimeType) {
+            if ($fileEntity->isImage()) {
                 $this->saveFileImage($fileEntity, $GroupEntity);
             }
             $transaction->commit();
