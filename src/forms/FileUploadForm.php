@@ -24,6 +24,6 @@ class FileUploadForm extends Model
 
     public static function getName()
     {
-        return 'FileUploadForm';
+        return str_replace(__NAMESPACE__ . '\\', '', __CLASS__);
     }
 }

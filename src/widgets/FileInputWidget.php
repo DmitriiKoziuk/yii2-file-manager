@@ -12,12 +12,12 @@ use DmitriiKoziuk\yii2FileManager\assets\FileSortAsset;
 
 class FileInputWidget extends Widget
 {
-    public string $fileUploadArrayName;
+    public string $formName;
     public string $moduleName;
     public string $entityName;
     public string $entityId;
     public string $saveLocationAlias = '@frontend';
-    public int    $maxFileCount = 20;
+    public int    $maxFileCount = 100;
     public array  $initialPreview = [];
     public array  $initialPreviewConfig = [];
 
@@ -40,25 +40,26 @@ class FileInputWidget extends Widget
     {
         $this->view->registerAssetBundle(FileSortAsset::class);
         return FileInput::widget([
-            'name' => "{$this->fileUploadArrayName}[]",
+            'name' => "{$this->formName}",
             'options'=>[
-                'multiple'=> true,
+                'multiple' => true,
                 'class' => 'upload-file-form',
+                'data-name' => "{$this->formName}",
             ],
             'pluginOptions' => [
-                'uploadAsync' => false,
+                'uploadAsync' => true,
                 'initialPreview' => $this->initialPreview,
-                'initialPreviewAsData'=> true,
-                'initialCaption'=> "",
+                'initialPreviewAsData' => true,
+                'initialCaption' => "",
                 'initialPreviewConfig' => $this->initialPreviewConfig,
                 'uploadUrl' => urldecode(Url::to(['/' . FileManagerModule::getId() . '/file/upload'])),
                 'uploadExtraData' => [
-                    'FileUploadForm[locationAlias]' => $this->saveLocationAlias,
-                    'FileUploadForm[moduleName]' => $this->moduleName,
-                    'FileUploadForm[entityName]' => $this->entityName,
-                    'FileUploadForm[specificEntityId]' => $this->entityId,
+                    "{$this->formName}[locationAlias]" => $this->saveLocationAlias,
+                    "{$this->formName}[moduleName]" => $this->moduleName,
+                    "{$this->formName}[entityName]" => $this->entityName,
+                    "{$this->formName}[specificEntityId]" => $this->entityId,
                 ],
-                'overwriteInitial'=> false,
+                'overwriteInitial' => false,
                 'maxFileCount' => $this->maxFileCount,
             ]
         ]);

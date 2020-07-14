@@ -32,7 +32,7 @@ MainBackendFileUploadAsset::register($this);
   <div class="row">
     <div class="col-md-12">
         <?= FileInputWidget::widget([
-            'fileUploadArrayName' => FileUploadForm::getName(),
+            'formName' => FileUploadForm::getName(),
             'moduleName' => FileManagerModule::getId(),
             'entityName' => 'all-files',
             'entityId' => '1',
