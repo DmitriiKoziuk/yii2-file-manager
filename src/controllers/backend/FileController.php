@@ -9,15 +9,13 @@ use yii\web\ServerErrorHttpException;
 use yii\web\UploadedFile;
 use yii\base\Module;
 use yii\filters\VerbFilter;
-use yii\helpers\FileHelper;
 use yii\helpers\Url;
-use DmitriiKoziuk\yii2FileManager\forms\FileUploadForm;
-use DmitriiKoziuk\yii2FileManager\entities\FileEntity;
+use DmitriiKoziuk\yii2FileManager\forms\UploadFileFromWebForm;
 use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
 use DmitriiKoziuk\yii2FileManager\services\SettingsService;
 use DmitriiKoziuk\yii2FileManager\services\FileService;
 use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
-use DmitriiKoziuk\yii2FileManager\exceptions\forms\FileUploadFormNotValidException;
+use DmitriiKoziuk\yii2FileManager\exceptions\forms\UploadFilesFormWebFormNotValidException;
 
 /**
  * FileController implements the CRUD actions for File model.
@@ -88,27 +86,17 @@ final class FileController extends Controller
     {
         if (Yii::$app->request->isPost) {
             try {
-                $fileUploadForm = new FileUploadForm();
+                $fileUploadForm = new UploadFileFromWebForm();
                 if (
                     ! $fileUploadForm->load(Yii::$app->request->post()) ||
                     ! $fileUploadForm->validate()
                 ) {
-                    throw new FileUploadFormNotValidException();
+                    throw new UploadFilesFormWebFormNotValidException();
                 }
-                $savedFilesOnDisk = $this->saveUploadedFilesOnDisk(
-                    FileUploadForm::getName(),
-                    $fileUploadForm->locationAlias,
-                    $fileUploadForm->moduleName,
-                    $fileUploadForm->entityName,
-                    $fileUploadForm->specificEntityId
-                );
+                $uploadedFiles = UploadedFile::getInstancesByName(UploadFileFromWebForm::getName());
                 $savedFilesToDb = [];
-                foreach ($savedFilesOnDisk as $file) {
-                    $savedFilesToDb[] = $this->fileService->saveFileToDB(
-                        $file['file'],
-                        $file['realName'],
-                        $fileUploadForm
-                    );
+                foreach ($uploadedFiles as $uploadedFile) {
+                    $savedFilesToDb[] = $this->fileService->addUploadedFile($fileUploadForm, $uploadedFile);
                 }
                 $response['files'] = [];
                 foreach ($savedFilesToDb as $file) {
@@ -159,50 +147,5 @@ final class FileController extends Controller
         return [
             'status' => 'success',
         ];
-    }
-
-    private function saveUploadedFilesOnDisk(
-        string $filesArrayName,
-        string $location,
-        string $moduleName,
-        string $entityName,
-        int $specificEntityID
-    ) {
-        try {
-            $savedFiles = [];
-            $filePath = FileEntity::getUploadFileFolderFullPath($location, $moduleName, $entityName, $specificEntityID);
-            if(!is_dir($filePath)) {
-                FileHelper::createDirectory($filePath);
-            }
-
-            $uploadedFiles = UploadedFile::getInstancesByName($filesArrayName);
-            foreach ($uploadedFiles as $uploadedFile) {
-                $file = $filePath .
-                    DIRECTORY_SEPARATOR .
-                    FileEntity::prepareFilename($uploadedFile->baseName) . '.' . $uploadedFile->extension;
-                if (file_exists($file)) {
-                    $file = $filePath .
-                        DIRECTORY_SEPARATOR .
-                        FileEntity::prepareFilename($uploadedFile->baseName) .
-                        '_' .
-                        uniqid() .
-                        '.' .
-                        $uploadedFile->extension;
-                }
-                $uploadedFile->saveAs($file);
-                $savedFiles[] = [
-                    'file' => $file,
-                    'realName' => "{$uploadedFile->baseName}.{$uploadedFile->extension}",
-                ];
-            }
-            return $savedFiles;
-        } catch (\Throwable $e) {
-            if (isset($savedFiles) && ! empty($savedFiles)) {
-                foreach ($savedFiles as $savedFile) {
-                    unlink($savedFile['file']);
-                }
-            }
-            throw $e;
-        }
     }
 }

@@ -3,12 +3,14 @@
 namespace DmitriiKoziuk\yii2FileManager\forms;
 
 use yii\base\Model;
+use DmitriiKoziuk\yii2FileManager\interfaces\FileInterface;
 
-class FileUploadForm extends Model
+class UploadFileFromWebForm extends Model implements FileInterface
 {
     public ?string $locationAlias = null;
     public ?string $moduleName = null;
     public ?string $entityName = null;
+    public ?string $directory = null;
     public ?int $specificEntityId = null;
 
     public function rules()
@@ -18,8 +20,34 @@ class FileUploadForm extends Model
             [['moduleName'], 'string', 'max' => 45],
             [['entityName'], 'string', 'max' => 55],
             [['locationAlias'], 'string', 'max' => 25],
+            [['directory'], 'string', 'max' => 255],
             [['specificEntityId'], 'integer']
         ];
+    }
+
+    public function getLocationAlias(): string
+    {
+        return $this->locationAlias;
+    }
+
+    public function getModuleName(): string
+    {
+        return $this->moduleName;
+    }
+
+    public function getEntityName(): string
+    {
+        return $this->entityName;
+    }
+
+    public function getDirectory(): string
+    {
+        return $this->directory;
+    }
+
+    public function getSpecificEntityID(): int
+    {
+        return $this->specificEntityId;
     }
 
     public static function getName()

@@ -24,6 +24,15 @@ The preferred way to install this extension is through [composer](http://getcomp
    
 ## Console commands
 
+Queue
 ```
 php yii dk-file-manager-queue/info
+```
+
+Demo
+```
+php yii dk-file-manager/demo/fill-files
+```
+```
+php yii dk-file-manager/demo/fill-images
 ```

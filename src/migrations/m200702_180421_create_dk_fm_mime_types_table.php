@@ -10,17 +10,13 @@ class m200702_180421_create_dk_fm_mime_types_table extends Migration
 
     public function safeUp()
     {
-        $tableOptions = null;
-        if ($this->db->driverName === 'mysql') {
-            $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB';
-        }
         $this->createTable($this->dkFmMimeTypesTableName, [
             'id' => $this->primaryKey(),
             'type' => $this->string(45)->notNull(),
             'subtype' => $this->string(55)->notNull(),
-        ], $tableOptions);
+        ]);
         $this->createIndex(
-            'dk_fm_mime_types_uidx_type',
+            'dk_fm_mime_types__uidx__type',
             $this->dkFmMimeTypesTableName,
             [
                 'type',

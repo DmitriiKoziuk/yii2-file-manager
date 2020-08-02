@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 use DmitriiKoziuk\yii2FileManager\assets\MainBackendFileUploadAsset;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
-use DmitriiKoziuk\yii2FileManager\forms\FileUploadForm;
+use DmitriiKoziuk\yii2FileManager\forms\UploadFileFromWebForm;
 use DmitriiKoziuk\yii2FileManager\widgets\FileInputWidget;
 
 $this->title = Yii::t(FileManagerModule::ID, 'Upload files');
@@ -32,7 +32,7 @@ MainBackendFileUploadAsset::register($this);
   <div class="row">
     <div class="col-md-12">
         <?= FileInputWidget::widget([
-            'formName' => FileUploadForm::getName(),
+            'formName' => UploadFileFromWebForm::getName(),
             'moduleName' => FileManagerModule::getId(),
             'entityName' => 'all-files',
             'entityId' => '1',

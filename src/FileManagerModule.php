@@ -77,6 +77,7 @@ final class FileManagerModule extends Module implements ModuleInterface
             $this->controllerNamespace = __NAMESPACE__ . '\controllers\backend';
         }
         if ($app instanceof ConsoleApp) {
+            $this->controllerNamespace = __NAMESPACE__ . '\commands';
             array_push(
                 $app->controllerMap['migrate']['migrationNamespaces'],
                 __NAMESPACE__ . '\migrations'

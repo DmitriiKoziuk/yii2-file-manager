@@ -4,6 +4,7 @@ namespace DmitriiKoziuk\yii2FileManager\entities;
 
 use Yii;
 use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 
 /**
@@ -16,11 +17,11 @@ use DmitriiKoziuk\yii2FileManager\FileManagerModule;
  *
  * @property FileEntity $file
  */
-class ImageEntity extends \yii\db\ActiveRecord
+class ImageEntity extends ActiveRecord
 {
-    const ORIENTATION_SQUARE = 0;
-    const ORIENTATION_LANDSCAPE = 1;
-    const ORIENTATION_PORTRAIT = 2;
+    const ORIENTATION_SQUARE = 'square';
+    const ORIENTATION_PORTRAIT = 'portrait';
+    const ORIENTATION_LANDSCAPE = 'landscape';
 
     /**
      * {@inheritdoc}
@@ -30,14 +31,13 @@ class ImageEntity extends \yii\db\ActiveRecord
         return '{{%dk_fm_images}}';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
             [['file_id', 'width', 'height', 'orientation'], 'required'],
-            [['file_id', 'width', 'height', 'orientation'], 'integer'],
+            [['file_id', 'width', 'height'], 'integer'],
+            [['orientation'], 'string'],
+            [['orientation'], 'in', 'range' => self::getOrientations()],
             [
                 ['file_id'],
                 'exist',
@@ -48,9 +48,6 @@ class ImageEntity extends \yii\db\ActiveRecord
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function attributeLabels()
     {
         return [
@@ -62,12 +59,19 @@ class ImageEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[File]].
-     *
      * @return ActiveQuery
      */
     public function getFile()
     {
         return $this->hasOne(FileEntity::class, ['id' => 'file_id']);
+    }
+
+    public static function getOrientations()
+    {
+        return [
+            self::ORIENTATION_SQUARE => self::ORIENTATION_SQUARE,
+            self::ORIENTATION_PORTRAIT => self::ORIENTATION_PORTRAIT,
+            self::ORIENTATION_LANDSCAPE => self::ORIENTATION_LANDSCAPE,
+        ];
     }
 }

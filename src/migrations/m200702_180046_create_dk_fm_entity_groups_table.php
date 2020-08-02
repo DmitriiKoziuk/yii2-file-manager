@@ -10,17 +10,13 @@ class m200702_180046_create_dk_fm_entity_groups_table extends Migration
 
     public function safeUp()
     {
-        $tableOptions = null;
-        if ($this->db->driverName === 'mysql') {
-            $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB';
-        }
         $this->createTable($this->dkFmEntityGroupsTableName, [
             'id' => $this->primaryKey(),
             'module_name' => $this->string(45)->notNull(),
             'entity_name' => $this->string(55)->notNull(),
-        ], $tableOptions);
+        ]);
         $this->createIndex(
-            'dk_fm_entity_group_uidx_module_entity',
+            'dk_fm_entity_group__uidx__module_entity',
             $this->dkFmEntityGroupsTableName,
             [
                 'module_name',

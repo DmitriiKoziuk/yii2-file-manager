@@ -6,8 +6,8 @@ use Yii;
 use yii\db\ActiveQuery;
 use yii\queue\cli\Queue;
 use yii\helpers\Inflector;
-use yii\behaviors\TimestampBehavior;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
+use DmitriiKoziuk\yii2FileManager\interfaces\FileInterface;
 use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
 
@@ -19,6 +19,7 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
  * @property int $mime_type_id
  * @property int $specific_entity_id
  * @property string $location_alias
+ * @property string $directory
  * @property string $name
  * @property string $real_name
  * @property int $size
@@ -30,7 +31,7 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
  * @property MimeTypeEntity $mimeType
  * @property ImageEntity $image
  */
-class FileEntity extends \yii\db\ActiveRecord
+class FileEntity extends \yii\db\ActiveRecord implements FileInterface
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
@@ -39,38 +40,25 @@ class FileEntity extends \yii\db\ActiveRecord
 
     private Queue $queue;
 
-    /**
-     * {@inheritdoc}
-     */
     public static function tableName()
     {
         return '{{%dk_fm_files}}';
     }
 
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::class,
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
             [
                 [
                     'entity_group_id', 'mime_type_id', 'specific_entity_id', 'location_alias',
-                    'name', 'real_name', 'size', 'sort'
+                    'directory', 'name', 'real_name', 'size', 'sort'
                 ],
                 'required'
             ],
-            [['entity_group_id', 'mime_type_id', 'specific_entity_id', 'size', 'sort', 'created_at', 'updated_at'], 'integer'],
+            [['entity_group_id', 'mime_type_id', 'specific_entity_id', 'size', 'sort'], 'integer'],
             [['location_alias'], 'string', 'max' => 25],
-            [['name'], 'string', 'max' => 155],
-            [['real_name'], 'string', 'max' => 255],
+            [['directory', 'name', 'real_name'], 'string', 'max' => 255],
+            [['created_at', 'updated_at'], 'date', 'format' => 'php:Y-m-d H:m:s'],
             [
                 ['entity_group_id', 'specific_entity_id', 'sort'],
                 'unique',
@@ -104,6 +92,7 @@ class FileEntity extends \yii\db\ActiveRecord
             'mime_type_id' => Yii::t(FileManagerModule::TRANSLATE, 'Mime Type ID'),
             'specific_entity_id' => Yii::t(FileManagerModule::TRANSLATE, 'Specific Entity ID'),
             'location_alias' => Yii::t(FileManagerModule::TRANSLATE, 'Location Alias'),
+            'directory' => Yii::t(FileManagerModule::TRANSLATE, 'Name'),
             'name' => Yii::t(FileManagerModule::TRANSLATE, 'Name'),
             'real_name' => Yii::t(FileManagerModule::TRANSLATE, 'Real Name'),
             'size' => Yii::t(FileManagerModule::TRANSLATE, 'Size'),
@@ -114,7 +103,7 @@ class FileEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return ActiveQuery|GroupEntity
+     * @return ActiveQuery
      */
     public function getEntityGroup()
     {
@@ -122,7 +111,7 @@ class FileEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return ActiveQuery|MimeTypeEntity
+     * @return ActiveQuery
      */
     public function getMimeType()
     {
@@ -130,11 +119,36 @@ class FileEntity extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return ActiveQuery|ImageEntity
+     * @return ActiveQuery
      */
     public function getImage()
     {
         return $this->hasOne(ImageEntity::class, ['file_id' => 'id']);
+    }
+
+    public function getLocationAlias(): string
+    {
+        return $this->location_alias;
+    }
+
+    public function getModuleName(): string
+    {
+        return $this->entityGroup->module_name;
+    }
+
+    public function getEntityName(): string
+    {
+        return $this->entityGroup->entity_name;
+    }
+
+    public function getDirectory(): string
+    {
+        return $this->directory;
+    }
+
+    public function getSpecificEntityID(): int
+    {
+        return $this->specific_entity_id;
     }
 
     public function isImage()
@@ -158,36 +172,30 @@ class FileEntity extends \yii\db\ActiveRecord
 
     public function getUrl()
     {
-        $webFolder = $this::getUploadFileWebFolder(
-            $this->entityGroup->module_name,
-            $this->entityGroup->entity_name,
-            $this->specific_entity_id
-        );
-        return $webFolder . '/' . $this->name;
+        return $this->getDirectory() . '/' . $this->name;
     }
 
     public function getFileFullPath()
     {
-        return self::getUploadFileFolderFullPath(
-                $this->location_alias,
-                $this->entityGroup->module_name,
-                $this->entityGroup->entity_name,
-                $this->specific_entity_id
-            ) . '/' . $this->name;
+        return self::getFullPathToFileDirectory($this) . '/' . $this->name;
     }
 
-    public static function getUploadFileWebFolder(string $moduleName, string $entityName, int $specificEntityID)
+    public static function getFullPathToFileDirectory(FileInterface $file) {
+        return Yii::getAlias($file->getLocationAlias()) .
+            '/web' .
+            $file->getDirectory();
+    }
+
+    public static function getWebDirectory(FileInterface $file)
     {
-        return "/uploads/{$moduleName}/{$entityName}/{$specificEntityID}";
-    }
-
-    public static function getUploadFileFolderFullPath(
-        string $location,
-        string $moduleName,
-        string $entityName,
-        int $specificEntityID
-    ) {
-        return Yii::getAlias($location) . '/web' . self::getUploadFileWebFolder($moduleName, $entityName, $specificEntityID);
+        $directory = md5((string) time());
+        $directory = chunk_split($directory, 2, '/');
+        $directory = substr($directory, 0, 8);
+        return '/uploads/' .
+            "{$file->getModuleName()}/" .
+            "{$file->getEntityName()}/" .
+            "{$directory}/" .
+            "{$file->getSpecificEntityID()}";
     }
 
     public static function prepareFilename(string $fileName): string
