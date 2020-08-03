@@ -4,11 +4,12 @@ namespace DmitriiKoziuk\yii2FileManager\entities;
 
 use Yii;
 use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
+use yii\base\InvalidConfigException;
 use yii\queue\cli\Queue;
 use yii\helpers\Inflector;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\interfaces\FileInterface;
-use DmitriiKoziuk\yii2FileManager\helpers\FileHelper;
 use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
 
 /**
@@ -31,14 +32,23 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
  * @property MimeTypeEntity $mimeType
  * @property ImageEntity $image
  */
-class FileEntity extends \yii\db\ActiveRecord implements FileInterface
+class FileEntity extends ActiveRecord implements FileInterface
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
     const BACKEND_LOCATION_ALIAS = '@backend';
 
-    private FileHelper $fileHelper;
-
     private Queue $queue;
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function init()
+    {
+        /** @var Queue $q */
+        $q = Yii::$app->get('dkFileManagerQueue');
+        $this->queue = $q;
+        parent::init();
+    }
 
     public static function tableName()
     {
@@ -156,18 +166,9 @@ class FileEntity extends \yii\db\ActiveRecord implements FileInterface
         return $this->mimeType->type == 'image';
     }
 
-    public function getThumbnail(int $width, int $height, int $quality = 65): string
+    public function isThumbnailExist(int $width, int $height, int $quality = 85)
     {
-        if ($this->fileHelper->isThumbExist($this, $width, $height, $quality)) {
-            return $this->fileHelper->getThumbnailWebPath($this, $width, $height, $quality);
-        }
-        $this->queue->push(new ThumbnailImagesJob([
-            'fileId' => $this->id,
-            'width' => $width,
-            'height' => $height,
-            'quality' => $quality,
-        ]));
-        return $this->getUrl();
+        return file_exists($this->getThumbnailFullPath($width, $height, $quality));
     }
 
     public function getUrl()
@@ -178,6 +179,52 @@ class FileEntity extends \yii\db\ActiveRecord implements FileInterface
     public function getFileFullPath()
     {
         return self::getFullPathToFileDirectory($this) . '/' . $this->name;
+    }
+
+    public function getThumbnailDirectoryFullPath(int $width, int $height, int $quality = 85)
+    {
+        return Yii::getAlias($this->getLocationAlias()) .
+            '/web' .
+            $this->getThumbnailWebPath($width, $height, $quality);
+    }
+
+    public function getThumbnailWebPath(int $width, int $height, int $quality = 85)
+    {
+        return '/uploads/cache/' .
+            "{$width}x{$height}-{$quality}/" .
+            "{$this->getModuleName()}/" .
+            "{$this->getEntityName()}/" .
+            "{$this->getDirectory()}/" .
+            "{$this->getSpecificEntityID()}";
+    }
+
+    public function getThumbnailFullPath(int $width, int $height, int $quality = 85)
+    {
+        return $this->getThumbnailDirectoryFullPath($width, $height, $quality) . $this->name;
+    }
+
+    public function getThumbnailWebUrl(int $width, int $height, int $quality = 85)
+    {
+        return $this->getThumbnailWebPath($width, $height, $quality) . "/{$this->name}";
+    }
+
+    public function getThumbnail(int $width, int $height, int $quality = 85): string
+    {
+        if ($this->isThumbnailExist($width, $height, $quality)) {
+            return $this->getThumbnailWebUrl($width, $height, $quality);
+        }
+        $this->thumbnail($width, $height, $quality);
+        return $this->getUrl();
+    }
+
+    public function thumbnail(int $width, int $height, int $quality = 85)
+    {
+        $this->queue->push(new ThumbnailImagesJob([
+            'fileId' => $this->id,
+            'width' => $width,
+            'height' => $height,
+            'quality' => $quality,
+        ]));
     }
 
     public static function getFullPathToFileDirectory(FileInterface $file) {
@@ -204,7 +251,7 @@ class FileEntity extends \yii\db\ActiveRecord implements FileInterface
         $fileName = Inflector::transliterate($fileName);
         $fileName = mb_strtolower($fileName);
         $fileName = preg_replace("/[^a-z0-9.\s]/","-", $fileName);
-        $fileName = preg_replace('/\s{1,}/', '-', $fileName);
+        $fileName = preg_replace('/\s+/', '-', $fileName);
         $fileName = preg_replace('/[-]{2,}/', '-', $fileName);
         return trim($fileName, '-');
     }
