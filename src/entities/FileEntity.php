@@ -26,8 +26,8 @@ use DmitriiKoziuk\yii2FileManager\services\SettingsService;
  * @property string $real_name
  * @property int $size
  * @property int $sort
- * @property int $created_at
- * @property int $updated_at
+ * @property string $created_at
+ * @property string $updated_at
  *
  * @property GroupEntity $entityGroup
  * @property MimeTypeEntity $mimeType
