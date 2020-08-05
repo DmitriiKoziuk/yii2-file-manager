@@ -61,11 +61,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'preview',
                 'content' => function (FileEntity $model) use ($settings) {
                     if ($model->isImage()) {
-                        $url = FileEntity::FRONTEND_LOCATION_ALIAS == $model->location_alias ?
-                            $settings->getFrontendDomain() . $model->getUrl() :
-                            $model->getUrl();
                         return Html::tag('img', '', [
-                            'src' => $url,
+                            'src' => $model->getUrl(),
                             'style' => 'max-width: 150px; max-height: 150px;',
                         ]);
 

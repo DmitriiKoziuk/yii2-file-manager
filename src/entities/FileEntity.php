@@ -11,6 +11,7 @@ use yii\helpers\Inflector;
 use DmitriiKoziuk\yii2FileManager\FileManagerModule;
 use DmitriiKoziuk\yii2FileManager\interfaces\FileInterface;
 use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
+use DmitriiKoziuk\yii2FileManager\services\SettingsService;
 
 /**
  * This is the model class for table "{{%dk_fm_files}}".
@@ -39,6 +40,8 @@ class FileEntity extends ActiveRecord implements FileInterface
 
     private Queue $queue;
 
+    private SettingsService $settings;
+
     /**
      * @throws InvalidConfigException
      */
@@ -47,6 +50,9 @@ class FileEntity extends ActiveRecord implements FileInterface
         /** @var Queue $q */
         $q = Yii::$app->get('dkFileManagerQueue');
         $this->queue = $q;
+        /** @var SettingsService $s */
+        $s = Yii::$container->get(SettingsService::class);
+        $this->settings = $s;
         parent::init();
     }
 
@@ -161,34 +167,40 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $this->specific_entity_id;
     }
 
-    public function isImage()
+    public function isImage(): bool
     {
         return $this->mimeType->type == 'image';
     }
 
-    public function isThumbnailExist(int $width, int $height, int $quality = 85)
+    public function isThumbnailExist(int $width, int $height, int $quality = 85): bool
     {
         return file_exists($this->getThumbnailFullPath($width, $height, $quality));
     }
 
-    public function getUrl()
+    public function getUrl(): string
     {
-        return $this->getDirectory() . '/' . $this->name;
+        switch ($this->location_alias) {
+            case '@frontend':
+                $url = $this->settings->getFrontendDomain() . $this->getDirectory() . '/' . $this->name;
+                break;
+            default: $url = '';
+        }
+        return $url;
     }
 
-    public function getFileFullPath()
+    public function getFileFullPath(): string
     {
         return self::getFullPathToFileDirectory($this) . '/' . $this->name;
     }
 
-    public function getThumbnailDirectoryFullPath(int $width, int $height, int $quality = 85)
+    public function getThumbnailDirectoryFullPath(int $width, int $height, int $quality = 85): string
     {
         return Yii::getAlias($this->getLocationAlias()) .
             '/web' .
             $this->getThumbnailWebPath($width, $height, $quality);
     }
 
-    public function getThumbnailWebPath(int $width, int $height, int $quality = 85)
+    public function getThumbnailWebPath(int $width, int $height, int $quality = 85): string
     {
         return '/uploads/cache/' .
             "{$width}x{$height}-{$quality}/" .
@@ -198,12 +210,12 @@ class FileEntity extends ActiveRecord implements FileInterface
             "{$this->getSpecificEntityID()}";
     }
 
-    public function getThumbnailFullPath(int $width, int $height, int $quality = 85)
+    public function getThumbnailFullPath(int $width, int $height, int $quality = 85): string
     {
         return $this->getThumbnailDirectoryFullPath($width, $height, $quality) . $this->name;
     }
 
-    public function getThumbnailWebUrl(int $width, int $height, int $quality = 85)
+    public function getThumbnailWebUrl(int $width, int $height, int $quality = 85): string
     {
         return $this->getThumbnailWebPath($width, $height, $quality) . "/{$this->name}";
     }
@@ -217,7 +229,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $this->getUrl();
     }
 
-    public function thumbnail(int $width, int $height, int $quality = 85)
+    public function thumbnail(int $width, int $height, int $quality = 85): void
     {
         $this->queue->push(new ThumbnailImagesJob([
             'fileId' => $this->id,
@@ -227,13 +239,13 @@ class FileEntity extends ActiveRecord implements FileInterface
         ]));
     }
 
-    public static function getFullPathToFileDirectory(FileInterface $file) {
+    public static function getFullPathToFileDirectory(FileInterface $file): string {
         return Yii::getAlias($file->getLocationAlias()) .
             '/web' .
             $file->getDirectory();
     }
 
-    public static function getWebDirectory(FileInterface $file)
+    public static function getWebDirectory(FileInterface $file): string
     {
         $directory = md5((string) time());
         $directory = chunk_split($directory, 2, '/');
