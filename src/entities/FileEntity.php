@@ -231,12 +231,14 @@ class FileEntity extends ActiveRecord implements FileInterface
 
     public function thumbnail(int $width, int $height, int $quality = 85): void
     {
-        $this->queue->push(new ThumbnailImagesJob([
-            'fileId' => $this->id,
-            'width' => $width,
-            'height' => $height,
-            'quality' => $quality,
-        ]));
+        if ($this->isImage()) {
+            $this->queue->push(new ThumbnailImagesJob([
+                'fileId' => $this->id,
+                'width' => $width,
+                'height' => $height,
+                'quality' => $quality,
+            ]));
+        }
     }
 
     public static function getFullPathToFileDirectory(FileInterface $file): string {
