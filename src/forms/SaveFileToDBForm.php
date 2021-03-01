@@ -15,14 +15,17 @@ class SaveFileToDBForm extends Model implements FileInterface
     public ?string $name = null;
     public ?string $real_name = null;
     public ?int $specificEntityId = null;
+    public ?string $mimeType = null;
+    public ?string $mimeSubtype = null;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [
                 [
                     'file', 'locationAlias', 'moduleName', 'entityName',
-                    'directory', 'name', 'real_name', 'specificEntityId'
+                    'directory', 'name', 'real_name', 'specificEntityId',
+                    'mimeType', 'mimeSubtype',
                 ],
                 'required'
             ],
@@ -31,7 +34,8 @@ class SaveFileToDBForm extends Model implements FileInterface
             [['moduleName'], 'string', 'max' => 45],
             [['entityName'], 'string', 'max' => 55],
             [['directory', 'name', 'real_name'], 'string', 'max' => 255],
-            [['specificEntityId'], 'integer']
+            [['specificEntityId'], 'integer'],
+            [['mimeType', 'mimeSubtype'], 'string']
         ];
     }
 
@@ -58,5 +62,15 @@ class SaveFileToDBForm extends Model implements FileInterface
     public function getSpecificEntityID(): int
     {
         return $this->specificEntityId;
+    }
+
+    public function getMimeType(): string
+    {
+        return $this->mimeType;
+    }
+
+    public function getMimeSubtype(): string
+    {
+        return $this->mimeSubtype;
     }
 }

@@ -13,7 +13,7 @@ class UploadFileFromWebForm extends Model implements FileInterface
     public ?string $directory = null;
     public ?int $specificEntityId = null;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['locationAlias', 'moduleName', 'entityName', 'specificEntityId'], 'required'],

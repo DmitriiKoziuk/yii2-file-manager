@@ -2,6 +2,7 @@
 
 namespace DmitriiKoziuk\yii2FileManager\services;
 
+use Throwable;
 use Yii;
 use yii\base\Component;
 use yii\web\UploadedFile;
@@ -30,10 +31,10 @@ class FileService extends Component
 {
     const EVENT_NEW_FILE_ADDED = 'newFileAdded';
 
-    private FileRepository $fileRepository;
-    private ImageRepository $imageRepository;
-    private MimeTypeRepository $mimeTypeRepository;
-    private EntityGroupRepository $entityGroupRepository;
+    protected FileRepository $fileRepository;
+    protected ImageRepository $imageRepository;
+    protected MimeTypeRepository $mimeTypeRepository;
+    protected EntityGroupRepository $entityGroupRepository;
 
     public function __construct(
         FileRepository $fileRepository,
@@ -49,6 +50,14 @@ class FileService extends Component
         $this->entityGroupRepository = $entityGroupRepository;
     }
 
+    /**
+     * @param GrabFileFromDiskForm $form
+     * @return FileEntity
+     * @throws CanNotCopyFileException
+     * @throws GrabFileFromDiskFormNotValidException
+     * @throws SaveFileToDBFromNotValidException
+     * @throws Throwable
+     */
     public function addFileFromDisk(GrabFileFromDiskForm $form): FileEntity {
         if (!$form->validate()) {
             throw new GrabFileFromDiskFormNotValidException();
@@ -64,10 +73,10 @@ class FileService extends Component
         if (!copy($form->file, $file)) {
             throw new CanNotCopyFileException();
         }
-        $form = $this->fillSaveFileToDBForm($form, $file, $name, $realName);
+        $form = $this->fillFormSaveFileToDB($form, $file, $name, $realName);
         try {
             $fileEntity = $this->saveFileToDB($form);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             unlink($file);
             throw $e;
         }
@@ -78,7 +87,7 @@ class FileService extends Component
      * @param UploadFileFromWebForm $form
      * @param UploadedFile $uploadedFile
      * @return FileEntity
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function addUploadedFile(UploadFileFromWebForm $form, UploadedFile $uploadedFile): FileEntity
     {
@@ -95,9 +104,9 @@ class FileService extends Component
                 'realName' => $realName
             ] = $this->uploadFileData($form, $uploadedFile);
             $uploadedFile->saveAs($file);
-            $form = $this->fillSaveFileToDBForm($form, $file, $name, $realName);
+            $form = $this->fillFormSaveFileToDB($form, $file, $name, $realName);
             return $this->saveFileToDB($form);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if (isset($file)) {
                 unlink($file);
             }
@@ -105,6 +114,11 @@ class FileService extends Component
         }
     }
 
+    /**
+     * @param int $fileId
+     * @throws TryDeleteNotExistFileException
+     * @throws Throwable
+     */
     public function deleteFile(int $fileId): void
     {
         $fileEntity = $this->fileRepository->getFileById($fileId);
@@ -116,21 +130,26 @@ class FileService extends Component
             $this->deleteFileFromDB($fileEntity);
             $this->deleteFileFromDisk($fileEntity);
             $transaction->commit();
-        } catch (\Exception $e) {
+        } catch (Throwable $t) {
             $transaction->rollBack();
-            throw $e;
+            throw $t;
         }
     }
 
-    private function saveFileToDB(SaveFileToDBForm $form): FileEntity {
+    /**
+     * @param SaveFileToDBForm $form
+     * @return FileEntity
+     * @throws SaveFileToDBFromNotValidException
+     * @throws Throwable
+     */
+    protected function saveFileToDB(SaveFileToDBForm $form): FileEntity {
         if (!$form->validate()) {
             throw new SaveFileToDBFromNotValidException();
         }
         $transaction = Yii::$app->db->beginTransaction();
         try {
             $groupEntity = $this->addEntityGroupIfNotExist($form);
-            [$mimeType, $mimeSubtype] = explode('/', mime_content_type($form->file));
-            $mimeTypeEntity = $this->addMimeTypeIfNotExist($mimeType, $mimeSubtype);
+            $mimeTypeEntity = $this->addMimeTypeIfNotExist($form->getMimeType(), $form->getMimeSubtype());
             $size = filesize($form->file);
             $fileEntity = $this->saveFile(
                 $groupEntity,
@@ -144,13 +163,18 @@ class FileService extends Component
             $transaction->commit();
             $this->newFileAddedEvent($fileEntity);
             return $fileEntity;
-        } catch (\Exception $e) {
+        } catch (Throwable $t) {
             $transaction->rollBack();
-            throw $e;
+            throw $t;
         }
     }
 
-    private function addEntityGroupIfNotExist(FileInterface $file): GroupEntity
+    /**
+     * @param FileInterface $file
+     * @return GroupEntity
+     * @throws Throwable
+     */
+    protected function addEntityGroupIfNotExist(FileInterface $file): GroupEntity
     {
         $group = $this->entityGroupRepository->getEntityGroup($file->getModuleName(), $file->getEntityName());
         if (empty($group)) {
@@ -162,7 +186,13 @@ class FileService extends Component
         return $group;
     }
 
-    private function addMimeTypeIfNotExist(string $type, string $subtype)
+    /**
+     * @param string $type
+     * @param string $subtype
+     * @return MimeTypeEntity
+     * @throws Throwable
+     */
+    protected function addMimeTypeIfNotExist(string $type, string $subtype): MimeTypeEntity
     {
         $entity = $this->mimeTypeRepository->getMimeType($type, $subtype);
         if (empty($entity)) {
@@ -174,7 +204,15 @@ class FileService extends Component
         return $entity;
     }
 
-    private function saveFile(
+    /**
+     * @param GroupEntity $groupEntity
+     * @param MimeTypeEntity $mimeTypeEntity
+     * @param SaveFileToDBForm $form
+     * @param int $size
+     * @return FileEntity
+     * @throws Throwable
+     */
+    protected function saveFile(
         GroupEntity $groupEntity,
         MimeTypeEntity $mimeTypeEntity,
         SaveFileToDBForm $form,
@@ -194,7 +232,12 @@ class FileService extends Component
         return $entity;
     }
 
-    private function saveImage(FileEntity $fileEntity): ImageEntity {
+    /**
+     * @param FileEntity $fileEntity
+     * @return ImageEntity
+     * @throws Throwable
+     */
+    protected function saveImage(FileEntity $fileEntity): ImageEntity {
         $image = $fileEntity->getFileFullPath();
         [$width, $height] = $this->getImageWidthAndHeight($image);
         $entity = new ImageEntity();
@@ -216,7 +259,7 @@ class FileService extends Component
      * @param string $fullPathToImage
      * @return array [Width, Height]
      */
-    private function getImageWidthAndHeight(string $fullPathToImage): array
+    protected function getImageWidthAndHeight(string $fullPathToImage): array
     {
         $image = Image::getImagine()
             ->open($fullPathToImage);
@@ -224,7 +267,11 @@ class FileService extends Component
         return [$size->getWidth(), $size->getHeight()];
     }
 
-    private function deleteFileFromDB(FileEntity $fileEntity): void
+    /**
+     * @param FileEntity $fileEntity
+     * @throws Throwable
+     */
+    protected function deleteFileFromDB(FileEntity $fileEntity): void
     {
         if ($fileEntity->isImage()) {
             $this->imageRepository->delete($fileEntity->image);
@@ -232,7 +279,7 @@ class FileService extends Component
         $this->fileRepository->delete($fileEntity);
     }
 
-    private function deleteFileFromDisk(FileEntity $fileEntity): void
+    protected function deleteFileFromDisk(FileEntity $fileEntity): void
     {
         $file = $fileEntity->getFileFullPath();
         if (is_file($file)) {
@@ -240,7 +287,12 @@ class FileService extends Component
         }
     }
 
-    private function diskFileData(GrabFileFromDiskForm $form): array
+    /**
+     * @param GrabFileFromDiskForm $form
+     * @return array
+     * @throws Throwable
+     */
+    protected function diskFileData(GrabFileFromDiskForm $form): array
     {
         $saveTo = FileEntity::getFullPathToFileDirectory($form);
         if(!is_dir($saveTo)) {
@@ -257,7 +309,13 @@ class FileService extends Component
         return ['file' => $file, 'name' => $fileName, 'realName' => $fileRealName];
     }
 
-    private function uploadFileData(
+    /**
+     * @param UploadFileFromWebForm $form
+     * @param UploadedFile $uploadedFile
+     * @return string[]
+     * @throws Throwable
+     */
+    protected function uploadFileData(
         UploadFileFromWebForm $form,
         UploadedFile $uploadedFile
     ): array {
@@ -283,12 +341,13 @@ class FileService extends Component
         return ['file' => $file, 'name' => $fileName, 'realName' => $fileRealName];
     }
 
-    private function fillSaveFileToDBForm(
+    protected function fillFormSaveFileToDB(
         FileInterface $fileI,
         string $file,
         string $name,
         string $realName
     ): SaveFileToDBForm {
+        [$mimeType, $mimeSubtype] = explode('/', mime_content_type($file));
         $form = new SaveFileToDBForm();
         $form->file = $file;
         $form->locationAlias = $fileI->getLocationAlias();
@@ -298,10 +357,12 @@ class FileService extends Component
         $form->directory = $fileI->getDirectory();
         $form->name = $name;
         $form->real_name = $realName;
+        $form->mimeType = $mimeType;
+        $form->mimeSubtype = $mimeSubtype;
         return $form;
     }
 
-    private function newFileAddedEvent(FileEntity $fileEntity): void
+    protected function newFileAddedEvent(FileEntity $fileEntity): void
     {
         $event = new NewFileAddedEvent();
         $event->fileEntity = $fileEntity;

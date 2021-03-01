@@ -14,7 +14,7 @@ class GrabFileFromDiskForm extends Model implements FileInterface
     public ?string $directory = null;
     public ?int $specificEntityId = null;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['file', 'locationAlias', 'moduleName', 'entityName', 'specificEntityId'], 'required'],
