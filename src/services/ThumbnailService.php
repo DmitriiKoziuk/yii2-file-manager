@@ -36,7 +36,7 @@ class ThumbnailService
             throw new Exception("File with id '{$fileID}' not image.");
         }
         if (!$fileEntity->isThumbnailExist($width, $height, $quality)) {
-            $originalImage      = $fileEntity->getFileFullPath();
+            $originalImage      = $fileEntity->getFileFullPath2();
             $thumbnailDirectory = $fileEntity->getThumbnailDirectoryFullPath($width, $height, $quality);
             FileHelper::createDirectory($thumbnailDirectory);
             $thumbnailImageFullPath = $fileEntity->getThumbnailFullPath($width, $height, $quality);

@@ -183,6 +183,11 @@ class FileEntity extends ActiveRecord implements FileInterface
         return self::getFullPathToFileDirectory($this) . '/' . $this->name;
     }
 
+    public function getFileFullPath2(): string
+    {
+        return $this->getFullPath() . '/' . $this->name;
+    }
+
     public function getThumbnailDirectoryFullPath(int $width, int $height, int $quality = 85): string
     {
         return Yii::getAlias($this->getLocationAlias()) .
@@ -240,6 +245,14 @@ class FileEntity extends ActiveRecord implements FileInterface
         return Yii::getAlias($file->getLocationAlias()) .
             '/web' .
             $file->getDirectory();
+    }
+
+    public function getFullPath(): string
+    {
+        return Yii::getAlias($this->getLocationAlias()) .
+            '/web' .
+            $this->entityGroup->getDirectory() .
+            $this->getDirectory();
     }
 
     public static function getWebDirectory(FileInterface $file): string
