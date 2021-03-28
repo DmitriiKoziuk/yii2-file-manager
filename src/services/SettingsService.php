@@ -15,4 +15,9 @@ class SettingsService
     {
         return $this->settings['frontendDomain'];
     }
+
+    public function getBackendDomain(): string
+    {
+        return $this->settings['backendDomain'];
+    }
 }

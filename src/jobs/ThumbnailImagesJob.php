@@ -11,25 +11,10 @@ use DmitriiKoziuk\yii2FileManager\services\ThumbnailService;
 
 class ThumbnailImagesJob extends BaseObject implements JobInterface
 {
-    /**
-     * @var int
-     */
-    public $fileId;
-
-    /**
-     * @var int
-     */
-    public $width;
-
-    /**
-     * @var int
-     */
-    public $height;
-
-    /**
-     * @var int
-     */
-    public $quality;
+    public int $fileId;
+    public int $width;
+    public int $height;
+    public int $quality;
 
     /**
      * @param Queue $queue

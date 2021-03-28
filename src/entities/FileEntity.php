@@ -14,29 +14,27 @@ use DmitriiKoziuk\yii2FileManager\jobs\ThumbnailImagesJob;
 use DmitriiKoziuk\yii2FileManager\services\SettingsService;
 
 /**
- * This is the model class for table "{{%dk_fm_files}}".
- *
- * @property int $id
- * @property int $entity_group_id
- * @property int $mime_type_id
- * @property int $specific_entity_id
+ * @property int    $id
+ * @property int    $entity_group_id
+ * @property int    $mime_type_id
+ * @property int    $specific_entity_id
  * @property string $location_alias
  * @property string $directory
  * @property string $name
  * @property string $real_name
- * @property int $size
- * @property int $sort
+ * @property int    $size
+ * @property int    $sort
  * @property string $created_at
  * @property string $updated_at
  *
- * @property GroupEntity $entityGroup
+ * @property GroupEntity    $entityGroup
  * @property MimeTypeEntity $mimeType
- * @property ImageEntity $image
+ * @property ImageEntity    $image
  */
 class FileEntity extends ActiveRecord implements FileInterface
 {
     const FRONTEND_LOCATION_ALIAS = '@frontend';
-    const BACKEND_LOCATION_ALIAS = '@backend';
+    const BACKEND_LOCATION_ALIAS  = '@backend';
 
     private Queue $queue;
 
@@ -56,12 +54,12 @@ class FileEntity extends ActiveRecord implements FileInterface
         parent::init();
     }
 
-    public static function tableName()
+    public static function tableName(): string
     {
         return '{{%dk_fm_files}}';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [
@@ -74,7 +72,7 @@ class FileEntity extends ActiveRecord implements FileInterface
             [['entity_group_id', 'mime_type_id', 'specific_entity_id', 'size', 'sort'], 'integer'],
             [['location_alias'], 'string', 'max' => 25],
             [['directory', 'name', 'real_name'], 'string', 'max' => 255],
-            [['created_at', 'updated_at'], 'date', 'format' => 'php:Y-m-d H:m:s'],
+            [['created_at', 'updated_at'], 'date', 'format' => 'php:Y-m-d H:i:s'],
             [
                 ['entity_group_id', 'specific_entity_id', 'sort'],
                 'unique',
@@ -97,10 +95,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => Yii::t(FileManagerModule::TRANSLATE, 'ID'),
@@ -118,26 +113,17 @@ class FileEntity extends ActiveRecord implements FileInterface
         ];
     }
 
-    /**
-     * @return ActiveQuery
-     */
-    public function getEntityGroup()
+    public function getEntityGroup(): ActiveQuery
     {
         return $this->hasOne(GroupEntity::class, ['id' => 'entity_group_id']);
     }
 
-    /**
-     * @return ActiveQuery
-     */
-    public function getMimeType()
+    public function getMimeType(): ActiveQuery
     {
         return $this->hasOne(MimeTypeEntity::class, ['id' => 'mime_type_id']);
     }
 
-    /**
-     * @return ActiveQuery
-     */
-    public function getImage()
+    public function getImage(): ActiveQuery
     {
         return $this->hasOne(ImageEntity::class, ['file_id' => 'id']);
     }
@@ -174,18 +160,22 @@ class FileEntity extends ActiveRecord implements FileInterface
 
     public function isThumbnailExist(int $width, int $height, int $quality = 85): bool
     {
-        return file_exists($this->getThumbnailFullPath($width, $height, $quality));
+        $file = $this->getThumbnailFullPath($width, $height, $quality);
+        return file_exists($file);
     }
 
     public function getUrl(): string
     {
-        switch ($this->location_alias) {
-            case '@frontend':
-                $url = $this->settings->getFrontendDomain() . $this->getDirectory() . '/' . $this->name;
-                break;
-            default: $url = '';
+        if (self::FRONTEND_LOCATION_ALIAS === $this->location_alias) {
+            $domain = $this->settings->getFrontendDomain();
+        } else {
+            $domain = $this->settings->getBackendDomain();
         }
-        return $url;
+        $moduleDirectory = $this->entityGroup->getDirectory();
+        $fileDirectory   = $this->getDirectory();
+        $fileName        = $this->name;
+
+        return "{$domain}{$moduleDirectory}/{$fileDirectory}/{$fileName}";
     }
 
     public function getFileFullPath(): string
@@ -200,24 +190,29 @@ class FileEntity extends ActiveRecord implements FileInterface
             $this->getThumbnailWebPath($width, $height, $quality);
     }
 
-    public function getThumbnailWebPath(int $width, int $height, int $quality = 85): string
+    protected function getThumbnailWebPath(int $width, int $height, int $quality = 85): string
     {
-        return '/uploads/cache/' .
-            "{$width}x{$height}-{$quality}/" .
-            "{$this->getModuleName()}/" .
-            "{$this->getEntityName()}/" .
-            "{$this->getDirectory()}/" .
-            "{$this->getSpecificEntityID()}";
+        return '/image-cache' .
+            "/{$width}x{$height}-{$quality}" .
+            "/{$this->getModuleName()}" .
+            "/{$this->getEntityName()}" .
+            "{$this->getDirectory()}";
     }
 
     public function getThumbnailFullPath(int $width, int $height, int $quality = 85): string
     {
-        return $this->getThumbnailDirectoryFullPath($width, $height, $quality) . $this->name;
+        return $directory = $this->getThumbnailDirectoryFullPath($width, $height, $quality) . '/' . $this->name;
     }
 
     public function getThumbnailWebUrl(int $width, int $height, int $quality = 85): string
     {
-        return $this->getThumbnailWebPath($width, $height, $quality) . "/{$this->name}";
+        if (self::FRONTEND_LOCATION_ALIAS === $this->location_alias) {
+            $domain = $this->settings->getFrontendDomain();
+        } else {
+            $domain = $this->settings->getBackendDomain();
+        }
+
+        return $domain . $this->getThumbnailWebPath($width, $height, $quality) . "/{$this->name}";
     }
 
     public function getThumbnail(int $width, int $height, int $quality = 85): string
@@ -229,7 +224,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $this->getUrl();
     }
 
-    public function thumbnail(int $width, int $height, int $quality = 85): void
+    protected function thumbnail(int $width, int $height, int $quality = 85): void
     {
         if ($this->isImage()) {
             $this->queue->push(new ThumbnailImagesJob([

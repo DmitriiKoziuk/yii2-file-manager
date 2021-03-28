@@ -2,6 +2,8 @@
 
 namespace DmitriiKoziuk\yii2FileManager\controllers\backend;
 
+use Exception;
+use Throwable;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
@@ -15,11 +17,10 @@ use DmitriiKoziuk\yii2FileManager\data\FileSearchForm;
 use DmitriiKoziuk\yii2FileManager\services\SettingsService;
 use DmitriiKoziuk\yii2FileManager\services\FileService;
 use DmitriiKoziuk\yii2FileManager\services\FileSearchService;
+use DmitriiKoziuk\yii2FileManager\exceptions\services\file\TryDeleteNotExistFileException;
 use DmitriiKoziuk\yii2FileManager\exceptions\forms\UploadFilesFormWebFormNotValidException;
 
-/**
- * FileController implements the CRUD actions for File model.
- */
+/** @noinspection PhpUnused */
 final class FileController extends Controller
 {
     private FileService $fileService;
@@ -38,10 +39,7 @@ final class FileController extends Controller
         $this->fileService = $fileService;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             'verbs' => [
@@ -75,13 +73,19 @@ final class FileController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionView($id)
+    public function actionView(int $id)
     {
         return $this->render('view', [
             'model' => '',
         ]);
     }
 
+    /**
+     * @return bool|string
+     * @throws ServerErrorHttpException
+     *
+     * @noinspection PhpUnused
+     */
     public function actionUpload()
     {
         if (Yii::$app->request->isPost) {
@@ -111,7 +115,7 @@ final class FileController extends Controller
                     ];
                 }
                 return true;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Yii::error($e);
                 if (isset($savedFilesOnDisk) && ! empty($savedFilesOnDisk)) {
                     foreach ($savedFilesOnDisk as $savedFile) {
@@ -130,17 +134,23 @@ final class FileController extends Controller
         //TODO: file update.
     }
 
-    public function actionDelete(int $id)
+    /**
+     * @param int $id
+     * @return Response
+     * @throws TryDeleteNotExistFileException
+     * @throws Throwable
+     */
+    public function actionDelete(int $id): Response
     {
         try {
             $this->fileService->deleteFile($id);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw $e;
         }
         return $this->redirect(['index']);
     }
 
-    public function actionSort()
+    public function actionSort(): array
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 

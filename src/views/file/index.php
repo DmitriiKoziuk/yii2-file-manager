@@ -47,6 +47,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $model->entityGroup->entity_name;
                 },
             ],
+            [
+                'attribute' => 'module directory',
+                'content' => function (FileEntity $model) {
+                    return $model->entityGroup->files_directory;
+                },
+            ],
             'specific_entity_id',
             'location_alias',
             [
@@ -55,6 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     return "{$model->mimeType->type} / {$model->mimeType->subtype}";
                 },
             ],
+            'directory',
             'name',
             'real_name',
             [
