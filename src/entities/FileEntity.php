@@ -175,7 +175,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         $fileDirectory   = $this->getDirectory();
         $fileName        = $this->name;
 
-        return "{$domain}{$moduleDirectory}/{$fileDirectory}/{$fileName}";
+        return "{$domain}{$moduleDirectory}{$fileDirectory}/{$fileName}";
     }
 
     public function getFileFullPath(): string
@@ -197,7 +197,7 @@ class FileEntity extends ActiveRecord implements FileInterface
 
     protected function getThumbnailWebPath(int $width, int $height, int $quality = 85): string
     {
-        return '/image-cache' .
+        return '/thumbnails' .
             "/{$width}x{$height}-{$quality}" .
             "/{$this->getModuleName()}" .
             "/{$this->getEntityName()}" .
