@@ -2,6 +2,8 @@
 
 namespace DmitriiKoziuk\yii2FileManager\services;
 
+use DmitriiKoziuk\yii2FileManager\exceptions\forms\AddFileFormNotValidException;
+use DmitriiKoziuk\yii2FileManager\forms\AddFileForm;
 use Throwable;
 use Yii;
 use yii\base\Component;
@@ -48,6 +50,30 @@ class FileService extends Component
         $this->imageRepository = $imageRepository;
         $this->mimeTypeRepository = $mimeTypeRepository;
         $this->entityGroupRepository = $entityGroupRepository;
+    }
+
+    /**
+     * @param AddFileForm $form
+     * @return FileEntity
+     * @throws AddFileFormNotValidException
+     * @throws Throwable
+     */
+    public function addFile(AddFileForm $form): FileEntity
+    {
+        if (!$form->validate()) {
+            throw new AddFileFormNotValidException();
+        }
+        $file = $form->file;
+        $name = basename($form->file);
+        $realName = $name;
+        $form = $this->fillFormSaveFileToDB($form, $file, $name, $realName, $form->moduleDirectory);
+        try {
+            $fileEntity = $this->saveFileToDB($form);
+        } catch (Throwable $e) {
+            unlink($file);
+            throw $e;
+        }
+        return $fileEntity;
     }
 
     /**
@@ -170,17 +196,18 @@ class FileService extends Component
     }
 
     /**
-     * @param FileInterface $file
+     * @param SaveFileToDBForm $file
      * @return GroupEntity
      * @throws Throwable
      */
-    protected function addEntityGroupIfNotExist(FileInterface $file): GroupEntity
+    protected function addEntityGroupIfNotExist(SaveFileToDBForm $file): GroupEntity
     {
         $group = $this->entityGroupRepository->getEntityGroup($file->getModuleName(), $file->getEntityName());
         if (empty($group)) {
             $group = new GroupEntity();
             $group->module_name = $file->getModuleName();
             $group->entity_name = $file->getEntityName();
+            $group->files_directory = $file->getModuleDirectory();
             $this->entityGroupRepository->save($group);
         }
         return $group;
@@ -238,7 +265,7 @@ class FileService extends Component
      * @throws Throwable
      */
     protected function saveImage(FileEntity $fileEntity): ImageEntity {
-        $image = $fileEntity->getFileFullPath();
+        $image = $fileEntity->getFileFullPath2();
         [$width, $height] = $this->getImageWidthAndHeight($image);
         $entity = new ImageEntity();
         $entity->file_id = $fileEntity->id;
@@ -345,7 +372,8 @@ class FileService extends Component
         FileInterface $fileI,
         string $file,
         string $name,
-        string $realName
+        string $realName,
+        ?string $moduleDirectory = null
     ): SaveFileToDBForm {
         [$mimeType, $mimeSubtype] = explode('/', mime_content_type($file));
         $form = new SaveFileToDBForm();
@@ -353,6 +381,7 @@ class FileService extends Component
         $form->locationAlias = $fileI->getLocationAlias();
         $form->moduleName = $fileI->getModuleName();
         $form->entityName = $fileI->getEntityName();
+        $form->moduleDirectory = $moduleDirectory;
         $form->specificEntityId = $fileI->getSpecificEntityID();
         $form->directory = $fileI->getDirectory();
         $form->name = $name;

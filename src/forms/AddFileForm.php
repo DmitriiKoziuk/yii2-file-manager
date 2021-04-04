@@ -5,39 +5,27 @@ namespace DmitriiKoziuk\yii2FileManager\forms;
 use yii\base\Model;
 use DmitriiKoziuk\yii2FileManager\interfaces\FileInterface;
 
-class SaveFileToDBForm extends Model implements FileInterface
+class AddFileForm extends Model implements FileInterface
 {
     public ?string $file = null;
     public ?string $locationAlias = null;
     public ?string $moduleName = null;
     public ?string $entityName = null;
     public ?string $moduleDirectory = null;
-    public ?string $directory = null;
-    public ?string $name = null;
-    public ?string $real_name = null;
+    public ?string $fileDirectory = null;
     public ?int $specificEntityId = null;
-    public ?string $mimeType = null;
-    public ?string $mimeSubtype = null;
 
     public function rules(): array
     {
         return [
-            [
-                [
-                    'file', 'locationAlias', 'moduleName', 'entityName',
-                    'directory', 'name', 'real_name', 'specificEntityId',
-                    'mimeType', 'mimeSubtype',
-                ],
-                'required'
-            ],
+            [['file', 'locationAlias', 'moduleName', 'entityName', 'specificEntityId'], 'required'],
             [['file'], 'string'],
             [['locationAlias'], 'string', 'max' => 25],
             [['moduleName'], 'string', 'max' => 45],
             [['entityName'], 'string', 'max' => 55],
             [['moduleDirectory'], 'string', 'max' => 55],
-            [['directory', 'name', 'real_name'], 'string', 'max' => 255],
+            [['fileDirectory'], 'string', 'max' => 255],
             [['specificEntityId'], 'integer'],
-            [['mimeType', 'mimeSubtype'], 'string']
         ];
     }
 
@@ -58,26 +46,11 @@ class SaveFileToDBForm extends Model implements FileInterface
 
     public function getDirectory(): string
     {
-        return $this->directory;
+        return $this->fileDirectory;
     }
 
     public function getSpecificEntityID(): int
     {
         return $this->specificEntityId;
-    }
-
-    public function getMimeType(): string
-    {
-        return $this->mimeType;
-    }
-
-    public function getMimeSubtype(): string
-    {
-        return $this->mimeSubtype;
-    }
-
-    public function getModuleDirectory(): string
-    {
-        return $this->moduleDirectory;
     }
 }
