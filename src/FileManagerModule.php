@@ -109,7 +109,7 @@ final class FileManagerModule extends Module implements ModuleInterface
 
     private function registerClassesToDIContainer(): void
     {
-        $this->diContainer->set(SettingsService::class, function () {
+        $this->diContainer->setSingleton(SettingsService::class, function () {
            return new SettingsService([
                'frontendDomain' => $this->frontendDomainName,
            ]);
