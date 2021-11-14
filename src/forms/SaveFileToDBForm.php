@@ -76,7 +76,7 @@ class SaveFileToDBForm extends Model implements FileInterface
         return $this->mimeSubtype;
     }
 
-    public function getModuleDirectory(): string
+    public function getModuleDirectory(): ?string
     {
         return $this->moduleDirectory;
     }
