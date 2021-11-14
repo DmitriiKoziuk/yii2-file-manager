@@ -13,6 +13,7 @@ class UploadFileFromWebForm extends Model implements FileInterface
     public ?string $directory = null;
     public ?int $specificEntityId = null;
     public ?string $moduleFilesDirectory = null;
+    public ?string $fileName = null;
 
     public function rules(): array
     {
@@ -21,7 +22,7 @@ class UploadFileFromWebForm extends Model implements FileInterface
             [['moduleName'], 'string', 'max' => 45],
             [['entityName'], 'string', 'max' => 55],
             [['locationAlias'], 'string', 'max' => 25],
-            [['directory'], 'string', 'max' => 255],
+            [['directory', 'fileName'], 'string', 'max' => 255],
             [['specificEntityId'], 'integer'],
             [['moduleFilesDirectory'], 'string'],
         ];
@@ -55,6 +56,11 @@ class UploadFileFromWebForm extends Model implements FileInterface
     public function getModuleFilesDirectory(): ?string
     {
         return $this->moduleFilesDirectory;
+    }
+
+    public function getFileName(): ?string
+    {
+        return $this->fileName;
     }
 
     public static function getName()

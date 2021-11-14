@@ -346,12 +346,17 @@ class FileService extends Component
         UploadFileFromWebForm $form,
         UploadedFile $uploadedFile
     ): array {
-        $saveTo = FileEntity::getFullPathToFileDirectory($form);
+        $saveTo = Yii::getAlias($form->getLocationAlias()) .
+            '/web' . $form->getModuleFilesDirectory() . $form->getDirectory();
         if(!is_dir($saveTo)) {
             FileHelper::createDirectory($saveTo);
         }
         $fileRealName = $uploadedFile->baseName . '.' . $uploadedFile->extension;
-        $fileName = FileEntity::prepareFilename($uploadedFile->baseName) . '.' . $uploadedFile->extension;
+        if (null !== $form->getFileName()) {
+            $fileName = FileEntity::prepareFilename($form->getFileName()) . '.' . $uploadedFile->extension;
+        } else {
+            $fileName = FileEntity::prepareFilename($uploadedFile->baseName) . '.' . $uploadedFile->extension;
+        }
         $file = $saveTo .
             DIRECTORY_SEPARATOR .
             $fileName;
