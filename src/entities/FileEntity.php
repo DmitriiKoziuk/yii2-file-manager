@@ -271,7 +271,6 @@ class FileEntity extends ActiveRecord implements FileInterface
     {
         $fileName = trim($fileName);
         $fileName = Inflector::transliterate($fileName);
-        $fileName = mb_strtolower($fileName);
         $fileName = preg_replace("/[^a-z0-9.\s]/","-", $fileName);
         $fileName = preg_replace('/\s+/', '-', $fileName);
         $fileName = preg_replace('/[-]{2,}/', '-', $fileName);
