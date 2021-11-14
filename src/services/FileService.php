@@ -130,7 +130,7 @@ class FileService extends Component
                 'realName' => $realName
             ] = $this->uploadFileData($form, $uploadedFile);
             $uploadedFile->saveAs($file);
-            $form = $this->fillFormSaveFileToDB($form, $file, $name, $realName);
+            $form = $this->fillFormSaveFileToDB($form, $file, $name, $realName, $form->getModuleFilesDirectory());
             return $this->saveFileToDB($form);
         } catch (Throwable $e) {
             if (isset($file)) {
