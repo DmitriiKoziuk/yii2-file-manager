@@ -28,7 +28,7 @@ class GroupEntity extends ActiveRecord
             [['module_name', 'entity_name'], 'required'],
             [['module_name'], 'string', 'max' => 45],
             [['entity_name'], 'string', 'max' => 55],
-            [['module_name', 'entity_name'], 'unique', 'targetAttribute' => ['module_name', 'entity_name']],
+            [['module_name', 'entity_name', 'files_directory'], 'unique', 'targetAttribute' => ['module_name', 'entity_name', 'files_directory']],
             [['files_directory'], 'string', 'max' => 55],
             [['files_directory'], 'default', 'value' => null],
         ];

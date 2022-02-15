@@ -202,7 +202,7 @@ class FileService extends Component
      */
     protected function addEntityGroupIfNotExist(SaveFileToDBForm $file): GroupEntity
     {
-        $group = $this->entityGroupRepository->getEntityGroup($file->getModuleName(), $file->getEntityName());
+        $group = $this->entityGroupRepository->getEntityGroup($file->getModuleName(), $file->getEntityName(), $file->getModuleDirectory());
         if (empty($group)) {
             $group = new GroupEntity();
             $group->module_name = $file->getModuleName();

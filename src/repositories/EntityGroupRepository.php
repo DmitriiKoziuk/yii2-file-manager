@@ -7,12 +7,13 @@ use DmitriiKoziuk\yii2FileManager\entities\GroupEntity;
 
 class EntityGroupRepository extends AbstractActiveRecordRepository
 {
-    public function getEntityGroup(string $moduleName, string $entityName): ?GroupEntity
+    public function getEntityGroup(string $moduleName, string $entityName, string $filesDirectory): ?GroupEntity
     {
         /** @var GroupEntity|null $e */
         $e = GroupEntity::find()->where([
             'module_name' => $moduleName,
             'entity_name' => $entityName,
+            'files_directory' => $filesDirectory,
         ])->one();
         return $e;
     }
