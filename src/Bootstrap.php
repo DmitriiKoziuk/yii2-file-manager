@@ -22,13 +22,6 @@ final class Bootstrap implements BootstrapInterface
      */
     public function bootstrap($app)
     {
-        $app->setComponents([
-            'dkFileManagerQueue' => [
-                'class' => Queue::class,
-                'path' => '@console/runtime/queue/dk-file-manager-queue',
-                'as log' => LogBehavior::class,
-            ],
-        ]);
         $app->bootstrap[] = 'dkFileManagerQueue';
         $queue = $app->get('dkFileManagerQueue');
         $container = Yii::$container;

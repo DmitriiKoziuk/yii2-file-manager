@@ -54,6 +54,11 @@ class FileEntity extends ActiveRecord implements FileInterface
         parent::init();
     }
 
+    public function __wakeup(): void
+    {
+        $this->init();
+    }
+
     public static function tableName(): string
     {
         return '{{%dk_fm_files}}';
