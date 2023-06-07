@@ -183,6 +183,15 @@ class FileEntity extends ActiveRecord implements FileInterface
         return "{$domain}{$moduleDirectory}{$fileDirectory}/{$fileName}";
     }
 
+    public function getWebPath(): string
+    {
+        $moduleDirectory = $this->entityGroup->getDirectory();
+        $fileDirectory   = $this->getDirectory();
+        $fileName        = $this->name;
+
+        return "{$moduleDirectory}{$fileDirectory}/{$fileName}";
+    }
+
     public function getFileFullPath(): string
     {
         return self::getFullPathToFileDirectory($this) . '/' . $this->name;
