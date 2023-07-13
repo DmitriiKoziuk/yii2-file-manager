@@ -48,6 +48,10 @@ class ThumbnailService
                 $height = $fileEntity->image->height;
             }
 
+            if (false === file_exists($originalImage)) {
+                return;
+            }
+
             Image::getImagine()
                 ->open($originalImage)
                 ->thumbnail(new Box($width, $height))
