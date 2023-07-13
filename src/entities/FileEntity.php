@@ -231,7 +231,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $directory = $this->getThumbnailDirectoryFullPath($width, $height, $quality) . '/' . $this->name;
     }
 
-    public function getThumbnailWebUrl(int $width, int $height, int $quality = 85): string
+    public function getThumbnailWebUrl(int $width, int $height = null, int $quality = 85): string
     {
         if (self::FRONTEND_LOCATION_ALIAS === $this->location_alias) {
             $domain = $this->settings->getFrontendDomain();
@@ -242,7 +242,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $domain . $this->getThumbnailWebPath($width, $height, $quality) . "/{$this->name}";
     }
 
-    public function getThumbnail(int $width, int $height, int $quality = 85): string
+    public function getThumbnail(int $width, int $height = null, int $quality = 85): string
     {
         if ($this->isThumbnailExist($width, $height, $quality)) {
             return $this->getThumbnailWebUrl($width, $height, $quality);
