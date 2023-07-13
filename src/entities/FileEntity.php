@@ -242,16 +242,18 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $domain . $this->getThumbnailWebPath($width, $height, $quality) . "/{$this->name}";
     }
 
-    public function getThumbnail(int $width, int $height = null, int $quality = 85): string
+    public function getThumbnail(int $width, int $height = null, int $quality = 85, bool $isCreate = false): string
     {
         if ($this->isThumbnailExist($width, $height, $quality)) {
             return $this->getThumbnailWebUrl($width, $height, $quality);
         }
-        $this->thumbnail($width, $height, $quality);
+        if (true === $isCreate) {
+            $this->thumbnail($width, $height, $quality);
+        }
         return $this->getUrl();
     }
 
-    protected function thumbnail(int $width, int $height, int $quality = 85): void
+    protected function thumbnail(int $width, int $height = null, int $quality = 85): void
     {
         if ($this->isImage()) {
             $this->queue->push(new ThumbnailImagesJob([

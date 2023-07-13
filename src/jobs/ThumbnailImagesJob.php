@@ -13,7 +13,7 @@ class ThumbnailImagesJob extends BaseObject implements JobInterface
 {
     public int $fileId;
     public int $width;
-    public int $height;
+    public int|null $height = null;
     public int $quality;
 
     /**
