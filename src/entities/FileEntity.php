@@ -163,7 +163,7 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $this->mimeType->type == 'image';
     }
 
-    public function isThumbnailExist(int $width, int $height, int $quality = 85): bool
+    public function isThumbnailExist(int $width, int $height = null, int $quality = 85): bool
     {
         $file = $this->getThumbnailFullPath($width, $height, $quality);
         return file_exists($file);
@@ -202,15 +202,23 @@ class FileEntity extends ActiveRecord implements FileInterface
         return $this->getFullPath() . '/' . $this->name;
     }
 
-    public function getThumbnailDirectoryFullPath(int $width, int $height, int $quality = 85): string
+    public function getThumbnailDirectoryFullPath(int $width, int $height = null, int $quality = 85): string
     {
         return Yii::getAlias($this->getLocationAlias()) .
             '/web' .
             $this->getThumbnailWebPath($width, $height, $quality);
     }
 
-    protected function getThumbnailWebPath(int $width, int $height, int $quality = 85): string
+    protected function getThumbnailWebPath(int $width, int $height = null, int $quality = 85): string
     {
+        if (null === $height) {
+            return '/thumbnails' .
+                "/{$width}-{$quality}" .
+                "/{$this->getModuleName()}" .
+                "/{$this->getEntityName()}" .
+                "{$this->getDirectory()}";
+        }
+
         return '/thumbnails' .
             "/{$width}x{$height}-{$quality}" .
             "/{$this->getModuleName()}" .
@@ -218,7 +226,7 @@ class FileEntity extends ActiveRecord implements FileInterface
             "{$this->getDirectory()}";
     }
 
-    public function getThumbnailFullPath(int $width, int $height, int $quality = 85): string
+    public function getThumbnailFullPath(int $width, int $height = null, int $quality = 85): string
     {
         return $directory = $this->getThumbnailDirectoryFullPath($width, $height, $quality) . '/' . $this->name;
     }
